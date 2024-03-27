@@ -1,9 +1,13 @@
 import re
 from io import StringIO
+from typing import Dict
 
+from django.apps import apps
 from django.core.management import load_command_class
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from eztaskmanager.settings import EZTASKMANAGER_N_REPORTS_INLINE
 
 
 class AppCommand(models.Model):
@@ -57,6 +61,10 @@ class LaunchReport(models.Model):
         max_length=20, choices=RESULT_CHOICES, default=RESULT_NO
     )
     invocation_datetime = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def get_notification_handlers(cls):
+        return apps.get_app_config('eztaskmanager').notification_handlers
 
     def get_log_lines(self):
         # Format the log entries as you like, here is an example
@@ -114,6 +122,13 @@ class LaunchReport(models.Model):
     @property
     def n_log_warnings(self):
         return self.logs.filter(level="WARNING").count()
+
+    def delete(self, *args, **kwargs):
+        task = self.task
+        # call the parent delete method
+        super().delete(*args, **kwargs)
+        # re-calculate cache
+        task.compute_cache()
 
     def __str__(self):
         """Return the string representation of the app command."""
@@ -313,6 +328,39 @@ class Task(models.Model):
                 ),
             )
         )
+
+    def compute_cache(self):
+        reports = self.launchreport_set.order_by('-invocation_datetime')
+        if reports.exists():
+            latest_report = reports[0]  # get the latest execution report
+
+            self.cached_last_invocation_datetime = latest_report.invocation_datetime
+            self.cached_last_invocation_result = latest_report.invocation_result
+            self.cached_last_invocation_n_errors = latest_report.n_log_errors
+            self.cached_last_invocation_n_warnings = latest_report.n_log_warnings
+            # self.cached_next_ride = latest_report.next_ride
+        else:
+            # no reports, set all cached values to None
+            self.cached_last_invocation_datetime = None
+            self.cached_last_invocation_result = None
+            self.cached_last_invocation_n_errors = None
+            self.cached_last_invocation_n_warnings = None
+            self.cached_next_ride = None
+
+        self.save()
+
+    def prune_reports(self, n: int = EZTASKMANAGER_N_REPORTS_INLINE):
+        """Delete all Task's LaunchReports except latest `n`"""
+        if n:
+            last_n_reports_ids = (
+                LaunchReport.objects.filter(task=self)
+                .order_by("-id")[:n]
+                .values_list("id", flat=True)
+            )
+            LaunchReport.objects.filter(task=self).exclude(
+                pk__in=list(last_n_reports_ids)
+            ).delete()
+            self.compute_cache()
 
     def __str__(self):
         """Return the string representation of the task."""

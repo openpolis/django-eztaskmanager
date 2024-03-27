@@ -126,6 +126,16 @@ STATICFILES_DIRS = [
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+
+# EMAIL
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-host
+EMAIL_HOST = "mailhog"
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-port
+EMAIL_PORT = 1025
+
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -138,7 +148,22 @@ RQ_QUEUES = {
     },
 }
 
-# TASK_QUEUE
-EZTASKMANAGER_QUEUE_SERVICE_TYPE = 'RQ'  # or 'CELERY'
-EZTASKMANAGER_LOG_MAX_LINES = 10
-EZTASKMANAGER_SHOW_LOGVIEWER_LINK = True
+# eztaskmanager
+# EZTASKMANAGER_QUEUE_SERVICE_TYPE = 'RQ'
+# EZTASKMANAGER_N_LINES_IN_REPORT_LOG = 10
+# EZTASKMANAGER_N_REPORTS_INLINE = 10
+# EZTASKMANAGER_SHOW_LOGVIEWER_LINK = True
+# EZTASKMANAGER_USE_FILTER_COLLAPSE = True
+# EZTASKMANAGER_NOTIFICATION_HANDLERS = {}
+# EZTASKMANAGER_BASE_URL = None
+EZTASKMANAGER_NOTIFICATION_HANDLERS = {
+    "email-errors": {
+        "class": "eztaskmanager.services.notifications.EmailNotificationHandler",
+        "level": "failure",
+        "from_email": "admin@example.com",
+        "recipients": ["admin@example.com", ],
+    },
+}
+
+EZTASKMANAGER_N_LINES_IN_REPORT_LOG = 5
+# EZTASKMANAGER_SHOW_LOGVIEWER_LINK = False

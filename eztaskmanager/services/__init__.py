@@ -4,6 +4,7 @@ from django.core.management import call_command
 
 from eztaskmanager.models import LaunchReport, Task
 from eztaskmanager.services.logger import verbosity2loglevel, DatabaseLogHandler
+from eztaskmanager.services.notifications import emit_notifications
 
 
 def run_management_command(task):
@@ -18,6 +19,8 @@ def run_management_command(task):
     """
     report = LaunchReport(task=task)
     report.save()
+
+    task.prune_reports()
 
     result = LaunchReport.RESULT_OK
 
@@ -69,3 +72,9 @@ def run_management_command(task):
     task.cached_last_invocation_datetime = report.invocation_datetime
     task.status = Task.STATUS_IDLE
     task.save()
+
+    # Finally, emit notifications
+    try:
+        emit_notifications(report)
+    except Exception as e:
+        pass

@@ -11,6 +11,7 @@ import time
 
 from eztaskmanager.models import AppCommand, TaskCategory, Task, LaunchReport
 from eztaskmanager.services.queues import RQTaskQueueService, get_task_service
+from eztaskmanager.settings import EZTASKMANAGER_N_LINES_IN_REPORT_LOG, EZTASKMANAGER_SHOW_LOGVIEWER_LINK
 
 
 def convert_to_local_dt(dt):
@@ -135,12 +136,12 @@ class LaunchReportMixin(object):
     """
 
     @mark_safe
-    def log_tail(self, report):
+    def log_tail_html(self, report):
         """Return the last lines of the log and a link to a logviewer."""
-        n_max_lines = getattr(settings, "EZTASKMANAGER_LOG_MAX_LINES", 10)
+        n_max_lines = EZTASKMANAGER_N_LINES_IN_REPORT_LOG
         lines = "<pre>"
         lines += report.log_tail(n_max_lines)
-        if getattr(settings, "EZTASKMANAGER_SHOW_LOGVIEWER_LINK", False):
+        if EZTASKMANAGER_SHOW_LOGVIEWER_LINK:
             last_report_url = reverse("eztaskmanager:live_log_viewer", args=(report.pk,))
             lines += _(
                 (
@@ -161,7 +162,7 @@ class LaunchReportAdmin(LaunchReportMixin, admin.ModelAdmin):
         "task",
         "invocation_result",
         "invocation_datetime",
-        "log_tail",
+        "log_tail_html",
         "n_log_errors",
         "n_log_warnings",
     )
@@ -187,7 +188,7 @@ class LaunchReportInline(LaunchReportMixin, admin.TabularInline):
 
     max_num = 5
     extra = 0
-    fields = readonly_fields = ("invocation_result", "invocation_datetime", "log_tail", "n_log_errors", "n_log_warnings", )
+    fields = readonly_fields = ("invocation_result", "invocation_datetime", "log_tail_html", "n_log_errors", "n_log_warnings", )
     ordering = [
         "-invocation_datetime",
     ]
@@ -351,7 +352,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         if result:
             result = result.upper()
         bgcolor = 'green'
-        title = _("Show logs in new tab")
+        title = _("Show log messages")
         result_str = result
         if result == 'WARNINGS':
             bgcolor = '#CCCC00'
@@ -372,16 +373,16 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     def last_result_with_logviewer_link(self, obj):
 
         s = "-"
-        link_text = _("Show logs in new tab")
+        link_text = _("Show log messages")
         last_report = obj.launchreport_set.order_by('invocation_datetime').last()
         result = obj.cached_last_invocation_result
         if result:
             s = result.upper()
-            last_report_url = reverse("eztaskmanager:live_log_viewer", args=(last_report.id,))
-            s = format_html(f"{s} - <a href=\"{last_report_url}\" target=\"_blank\">{link_text}</a>")
+            if EZTASKMANAGER_SHOW_LOGVIEWER_LINK:
+                last_report_url = reverse("eztaskmanager:live_log_viewer", args=(last_report.id,))
+                s = format_html(f"{s} - <a href=\"{last_report_url}\" target=\"_blank\">{link_text}</a>")
         return s
     last_result_with_logviewer_link.short_description = _("Last result")
-
 
     def cached_last_invocation_datetime(self, obj):
         """Return the string representation of the next ride."""

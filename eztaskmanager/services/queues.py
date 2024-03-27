@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import django_rq
 from django.conf import settings
 
+from eztaskmanager.settings import EZTASKMANAGER_QUEUE_SERVICE_TYPE
 from eztaskmanager.models import Task
 from eztaskmanager.services import run_management_command
 
@@ -45,7 +46,8 @@ class TaskQueueService(ABC):
 
 
 def get_task_service():
-    if getattr(settings, 'TASK_QUEUE_SERVICE_TYPE', 'RQ') == 'RQ':
+
+    if EZTASKMANAGER_QUEUE_SERVICE_TYPE == 'RQ':
         return RQTaskQueueService()
     else:
         raise Exception("Invalid task queue service type. Celery not yet implemented")
