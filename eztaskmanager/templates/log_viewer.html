@@ -1,0 +1,15 @@
+{% load i18n %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Report {{ pk }} | {% trans "Log viewer" %}</title>
+    <script src="{% static "js/linkify.min.js" %}"></script>
+  </head>
+  <body>
+    <pre id="loglines">
+{{ log_txt }}
+    </pre>
+  </body>
+</html>

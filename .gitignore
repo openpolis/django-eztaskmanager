@@ -1,0 +1,4 @@
+/.venv/
+/.python-version
+/demoproject/db.sqlite3
+/.idea/

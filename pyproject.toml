@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "eztaskmanager"
+version = "0.1.0"
+description = "Django application that allows the management of scheduled, long, asynchronous tasks."
+authors = ["Guglielmo Celata <guglielmo@openpolis.it>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+django = ">=3.2"
+pytz = "^2024.1"
+django-rq = "^2.10.2"
+rq-scheduler = "^0.13.1"
+django-extensions = "^3.2.3"
+gnureadline = "^8.1.2"
+whitenoise = "^6.6.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.22.2"
+uvicorn = "^0.29.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
