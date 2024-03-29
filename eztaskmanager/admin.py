@@ -7,10 +7,8 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from pytz import timezone
-import time
 
 from eztaskmanager.models import AppCommand, TaskCategory, Task, LaunchReport
-from eztaskmanager.services.queues import RQTaskQueueService, get_task_service
 from eztaskmanager.settings import EZTASKMANAGER_N_LINES_IN_REPORT_LOG, EZTASKMANAGER_SHOW_LOGVIEWER_LINK
 
 
@@ -279,7 +277,9 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         ),
         (
             "Scheduling",
-            {"fields": ("scheduling", "repetition_period", "repetition_rate")},
+            {"fields": (
+                "scheduling", "repetition_period", "repetition_rate", "cached_next_ride", "scheduled_job_id"
+            )},
         ),
         (
             "Last execution",
@@ -288,7 +288,6 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
                     "status",
                     "cached_last_invocation_datetime",
                     "last_result_with_logviewer_link",
-                    "cached_next_ride",
                     "cached_last_invocation_n_errors",
                     "cached_last_invocation_n_warnings",
                 )
@@ -297,6 +296,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     )
     readonly_fields = (
         "status",
+        "scheduled_job_id",
         "cached_last_invocation_datetime",
         "last_result_with_logviewer_link",
         "cached_next_ride",
@@ -308,6 +308,8 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     search_fields = ("name", "command__app_name", "command__name")
 
     def launch_tasks(self, request, queryset):
+        from eztaskmanager.services.queues import get_task_service
+
         service = get_task_service()
         for task in queryset:
             service.add(task)
@@ -316,6 +318,8 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     launch_tasks.short_description = 'Launch selected tasks'
 
     def stop_tasks(self, request, queryset):
+        from eztaskmanager.services.queues import get_task_service
+
         service = get_task_service()
         for task in queryset:
             service.remove(task)
@@ -394,6 +398,8 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     def response_change(self, request, task):
         """Determine the HttpResponse for the change_view stage."""
         if "_start-task" in request.POST:
+            from eztaskmanager.services.queues import get_task_service
+
             service = get_task_service()
             service.add(task)
             self.message_user(
@@ -403,6 +409,8 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
             )
             return HttpResponseRedirect(".")
         if "_stop-task" in request.POST:
+            from eztaskmanager.services.queues import get_task_service
+
             service = get_task_service()
             service.remove(task)
             self.message_user(

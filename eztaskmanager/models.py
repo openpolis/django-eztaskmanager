@@ -181,6 +181,7 @@ class Task(models.Model):
     REPETITION_PERIOD_MINUTE = "minute"
     REPETITION_PERIOD_HOUR = "hour"
     REPETITION_PERIOD_DAY = "day"
+    REPETITION_PERIOD_WEEK = "week"
     REPETITION_PERIOD_MONTH = "month"
     REPETITION_PERIOD_CHOICES = (
         (REPETITION_PERIOD_MINUTE, "MINUTE"),
@@ -222,15 +223,24 @@ class Task(models.Model):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default=STATUS_IDLE, editable=False
     )
-    scheduling = models.DateTimeField(blank=True, null=True)
+    scheduling = models.DateTimeField(
+        blank=True, null=True,
+        verbose_name=_("Initial scheduling")
+    )
     repetition_period = models.CharField(
         max_length=20, choices=REPETITION_PERIOD_CHOICES, blank=True
     )
     repetition_rate = models.PositiveSmallIntegerField(blank=True, null=True)
+
     note = models.TextField(
         blank=True, null=True, help_text=_("A note on how this task is used.")
     )
 
+    scheduled_job_id = models.CharField(
+        max_length=64,
+        blank=True, null=True,
+        help_text=_("A unique identifier for the scheduled job, if any")
+    )
     cached_last_invocation_datetime = models.DateTimeField(
         blank=True, null=True, verbose_name=_("Last datetime")
     )
@@ -248,8 +258,38 @@ class Task(models.Model):
         null=True, blank=True, verbose_name=_("Warnings")
     )
     cached_next_ride = models.DateTimeField(
-        blank=True, null=True, verbose_name=_("Next"),
+        blank=True, null=True, verbose_name=_("Next execution time"),
     )
+
+    @property
+    def interval_in_seconds(self):
+        """
+        Returns the interval in seconds based on the repetition period and rate.
+
+        Returns:
+            int: The interval in seconds.
+
+        Example:
+            # Create an instance of the class
+            obj = MyClass()
+
+            # Set the repetition period and rate
+            obj.repetition_period = 'day'
+            obj.repetition_rate = 2
+
+            # Calculate the interval in seconds
+            result = obj.interval_in_seconds()  # Returns 2 * 24 * 60 * 60
+
+        """
+        period_to_seconds = {
+            self.REPETITION_PERIOD_MINUTE: 60,
+            self.REPETITION_PERIOD_HOUR: 60 * 60,
+            self.REPETITION_PERIOD_DAY: 24 * 60 * 60,
+            self.REPETITION_PERIOD_WEEK: 7 * 24 * 60 * 60,
+            self.REPETITION_PERIOD_MONTH: 30 * 24 * 60 * 60
+        }
+
+        return period_to_seconds[self.repetition_period] * self.repetition_rate
 
     @property
     def _args_dict(self):
