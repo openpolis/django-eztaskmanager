@@ -187,8 +187,8 @@ Visit http://127.0.0.1:8000/admin/
 Django eztaskmanager is an application to manage common django management tasks
 *asynchronously*, via the Django admin interface, using Redis Queue.
 
-    Copyright (C) 2019-2020 Gabriele Giaccari, Gabriele Lucci, Guglielmo Celata, Paolo Melchiorre (django-uwsgi-taskmanager)
     Copyright (c) 2024 Guglielmo Celata (django-eztaskmanager)
+    Copyright (C) 2019-2020 Gabriele Giaccari, Gabriele Lucci, Guglielmo Celata, Paolo Melchiorre (django-uwsgi-taskmanager)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
