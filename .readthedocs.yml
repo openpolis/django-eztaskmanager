@@ -23,6 +23,5 @@ formats:
 python:
   install:
     - requirements: pyproject.toml
-      path: .
       extras:
         - docs
