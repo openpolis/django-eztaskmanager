@@ -22,7 +22,7 @@ formats:
 # Optionally set the version of Python and requirements required to build your docs
 python:
   install:
-    - method: pip
+    - requirements: pyproject.toml
       path: .
-      extra_requirements:
+      extras:
         - docs
