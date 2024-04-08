@@ -1,6 +1,7 @@
 """Test logging command."""
 
 from django.core import management
+
 from eztaskmanager.services.logger import LoggerEnabledCommand
 
 

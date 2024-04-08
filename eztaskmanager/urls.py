@@ -1,7 +1,8 @@
 """Define Django urls for the taskmanager app."""
 from django.urls import path
 
-from eztaskmanager.views import LogViewerView, LiveLogViewerView, AjaxReadLogLines
+from eztaskmanager.views import (AjaxReadLogLines, LiveLogViewerView,
+                                 LogViewerView)
 
 app_name = "eztaskmanager"
 

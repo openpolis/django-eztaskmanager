@@ -1,21 +1,19 @@
 """Define Django views for the taskmanager app."""
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
-
 from django.views.generic import TemplateView
 
 from eztaskmanager.models import LaunchReport
 
 
 class LogViewerView(TemplateView):
-    """
-    Class LogViewerView displays a log viewer page with log information for a specific report.
-    """
+    """Class LogViewerView displays a log viewer page with log information for a specific report."""
 
     template_name = "log_viewer.html"
 
     @staticmethod
     def get_report_lines(report):
+        """Return the log lines for this report."""
         return report.get_log_lines()
 
     def get_context_data(self, **kwargs):
@@ -55,8 +53,7 @@ class LiveLogViewerView(TemplateView):
     template_name = "live_log_viewer.html"
 
     def get_context_data(self, **kwargs):
-        """Return the context data for the view, removing the offset file, to allow
-        reading log lines from start"""
+        """Return the context data for the view, removing the offset file, to allow reading log lines from the start."""
         context = super().get_context_data(**kwargs)
         pk = context.get("pk", None)
 
@@ -72,11 +69,29 @@ class LiveLogViewerView(TemplateView):
 
 
 class AjaxReadLogLines(LogViewerView):
-    """Read log lines starting from an offset, as JsonResponse
+    """Read log lines starting from an offset, as JsonResponse.
+
     New log size and task status are included in the response.
     """
 
     def render_to_response(self, context, **response_kwargs):
+        """
+        Render a response with JSON data.
+
+        Args:
+            self: The instance of the class calling the method.
+            context (dict): A dictionary containing the context data.
+            **response_kwargs: Additional keyword arguments used for the response.
+
+        Returns:
+            JsonResponse: A response object with JSON data containing the following keys:
+                - new_log_lines (list): List of log lines.
+                - task_status (str): The status of the task.
+                - log_size (int): The size of the log.
+
+        Raises:
+            None.
+        """
         pk = context.get("pk", None)
         offset = int(self.request.GET.get('offset', 0))
         try:

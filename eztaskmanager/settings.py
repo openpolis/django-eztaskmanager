@@ -1,6 +1,6 @@
 """Define settings for the taskmanager app."""
 
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
 
 from django.conf import settings as django_project_settings
 

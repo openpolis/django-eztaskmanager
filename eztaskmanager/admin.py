@@ -8,9 +8,10 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from pytz import timezone
 
-from eztaskmanager.models import AppCommand, TaskCategory, Task, LaunchReport
+from eztaskmanager.models import AppCommand, LaunchReport, Task, TaskCategory
 from eztaskmanager.services.queues import TaskQueueException
-from eztaskmanager.settings import EZTASKMANAGER_N_LINES_IN_REPORT_LOG, EZTASKMANAGER_SHOW_LOGVIEWER_LINK
+from eztaskmanager.settings import (EZTASKMANAGER_N_LINES_IN_REPORT_LOG,
+                                    EZTASKMANAGER_SHOW_LOGVIEWER_LINK)
 
 
 def convert_to_local_dt(dt):
@@ -82,11 +83,11 @@ class BulkDeleteMixin(object):
             self.wrapped_queryset = wrapped_queryset
 
         def __getattr__(self, attr):
-            """Getattr method"""
+            """Getattr method."""
             return self._safe_delete
 
         def __iter__(self):
-            """Yeld obj from wrapperd queryset."""
+            """Yield obj from wrapped queryset."""
             for obj in self.wrapped_queryset:
                 yield obj
 
@@ -184,7 +185,9 @@ class LaunchReportInline(LaunchReportMixin, admin.TabularInline):
 
     max_num = 5
     extra = 0
-    fields = readonly_fields = ("invocation_result", "invocation_datetime", "log_tail_html", "n_log_errors", "n_log_warnings", )
+    fields = readonly_fields = (
+        "invocation_result", "invocation_datetime", "log_tail_html", "n_log_errors", "n_log_warnings",
+    )
     ordering = [
         "-invocation_datetime",
     ]
@@ -300,6 +303,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     search_fields = ("name", "command__app_name", "command__name")
 
     def launch_tasks(self, request, queryset):
+        """Put many tasks in the queue."""
         from eztaskmanager.services.queues import get_task_service
 
         service = get_task_service()
@@ -310,6 +314,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     launch_tasks.short_description = 'Launch selected tasks'
 
     def stop_tasks(self, request, queryset):
+        """Remove many tasks from the queue."""
         from eztaskmanager.services.queues import get_task_service
 
         service = get_task_service()
@@ -329,6 +334,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     repetition.short_description = _("Repetition rate")
 
     def name_desc(self, obj):
+        """Show the note on mouse over."""
         return format_html(
             f"<span title=\"{obj.note}\">{obj.name}</span>"
         )
@@ -336,6 +342,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     name_desc.short_description = _("Name")
 
     def invocation(self, obj):
+        """Show the command name, with arguments."""
         return format_html(
             f"<span style=\"font-weight: normal; font-family: Courier\"><b>{obj.command.name}</b> <br/>"
             f"{' '.join(obj.arguments.split(','))}</span>"
@@ -344,7 +351,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     invocation.short_description = _("Invocation")
 
     def last_result_with_logviewer_link(self, obj):
-
+        """Show the last result, with a log to the logviewer."""
         s = "-"
         link_text = _("Show log messages")
         last_report = obj.launchreport_set.order_by('invocation_datetime').last()

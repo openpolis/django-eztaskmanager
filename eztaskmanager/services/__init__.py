@@ -4,14 +4,16 @@ from typing import Optional
 from django.core.management import call_command
 
 from eztaskmanager.models import LaunchReport, Task
-from eztaskmanager.services.logger import verbosity2loglevel, DatabaseLogHandler
+from eztaskmanager.services.logger import (DatabaseLogHandler,
+                                           verbosity2loglevel)
 from eztaskmanager.services.notifications import emit_notifications
 from eztaskmanager.services.queues import get_task_service
 
 
 def run_management_command(task_id: int):
     """
-    Executes a management command.
+    Execute a management command.
+
     Creates a LaunchReport for this execution.
 
     :param task_id: The task object representing the management command to be executed.
@@ -33,7 +35,7 @@ def run_management_command(task_id: int):
         task: Task = Task.objects.get(id=task_id)
         local_logger.setLevel(verbosity2loglevel(int(task.options.get('verbosity', 1))))
     except Task.DoesNotExist:
-        local_logger.error(f"EXCEPTION raised: {e}")
+        local_logger.error(f"Task with id {task_id} not found")
     finally:
         local_logger.info('Finished')
 
@@ -98,5 +100,5 @@ def run_management_command(task_id: int):
         # Finally, emit notifications
         try:
             emit_notifications(report)
-        except Exception as e:
+        except Exception:
             pass

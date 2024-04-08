@@ -1,30 +1,40 @@
+"""Task queue services.
+
+These are the class that implement the interface to the queue managers.
+
+The abstract TaskQueueService class is the interface each class has to implement.
+
+- RQTaskQueueService implements the service with Redis Queue.
+- CeleryTaskQueueService implements the service with Celery (TBD)
+"""
 import datetime
 from abc import ABC, abstractmethod
 
 import django_rq
-from celery import shared_task, Celery
+from celery import Celery, shared_task
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from eztaskmanager.settings import EZTASKMANAGER_QUEUE_SERVICE_TYPE
 from eztaskmanager.models import Task
+from eztaskmanager.settings import EZTASKMANAGER_QUEUE_SERVICE_TYPE
 
 
 class TaskQueueService(ABC):
-    """
-    Abstract base class for managing task queues.
-    """
+    """Abstract base class for managing task queues."""
+
     @abstractmethod
     def add(self, task):  # pragma: no cover
+        """To be implemented in concrete subclasses."""
         pass
 
     @abstractmethod
     def remove(self, task):  # pragma: no cover
+        """To be implemented in concrete subclasses."""
         pass
 
 
 def get_task_service():
-
+    """Fetch the correct queue service, based on settings."""
     if EZTASKMANAGER_QUEUE_SERVICE_TYPE == 'RQ':
         return RQTaskQueueService()
     else:
@@ -32,6 +42,8 @@ def get_task_service():
 
 
 class TaskQueueException(Exception):
+    """Dedicated exception for TaskQueue classes."""
+
     pass
 
 
@@ -54,6 +66,8 @@ class RQTaskQueueService(TaskQueueService):
 
     def add(self, task: Task):
         """
+        Add the task to the Redis queue.
+
         Args:
             task: The task to be added.
 
@@ -94,9 +108,10 @@ class RQTaskQueueService(TaskQueueService):
                 rq_job = self.queue.enqueue(run_management_command, task.id)
             return rq_job
         except Exception as e:
-            raise TaskQueueException(_(f"Failed to add task: {e}"))
+            raise TaskQueueException(_(f"Failed to add task: {e}")) from e
 
     def fetch_job_with_next_time(self, task):
+        """Fetch the next job in the queue, with its execution time."""
         try:
             job_id, next_time = next(
                 (j, next_time) for j, next_time in self.scheduler.get_jobs(with_times=True)
@@ -108,6 +123,7 @@ class RQTaskQueueService(TaskQueueService):
             return None, None
 
     def remove(self, task):
+        """Remove the job from the queue and updates the tasks' values."""
         job, next_time = self.fetch_job_with_next_time(task)
 
         if job:
@@ -120,16 +136,14 @@ class RQTaskQueueService(TaskQueueService):
 
 @shared_task
 def execute_management_command(task):
-    """Wrap the management command executor for celery"""
+    """Wrap the management command executor for Celery."""
     from eztaskmanager.services import run_management_command
 
     return run_management_command(task)
 
 
 class CeleryTaskQueueService(TaskQueueService):
-    """
-    A subclass of TaskQueueService that manages tasks using Celery.
-    """
+    """A subclass of TaskQueueService that manages tasks using Celery."""
 
     def __init__(self):
         self.app = Celery(
@@ -138,6 +152,7 @@ class CeleryTaskQueueService(TaskQueueService):
         )
 
     def add(self, task: Task):
+        """Add a task to the Celery queue."""
         try:
             if task.scheduling:
                 delay = task.scheduling - datetime.datetime.now()
@@ -154,6 +169,7 @@ class CeleryTaskQueueService(TaskQueueService):
             print(f"Error while launching task: {e}")
 
     def remove(self, task):
+        """Remove a job from the Celery queue."""
         try:
             # With Celery, it's not straightforward to remove a task from the queue
             # The recommended way to stop a task is to revoke it

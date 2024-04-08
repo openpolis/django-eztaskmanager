@@ -27,4 +27,3 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # Do not connect labels signals during tests
 LABELS_CONNECT_SIGNALS = False
 TOPICS_CONNECT_SIGNALS = False
-

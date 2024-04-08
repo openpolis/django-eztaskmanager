@@ -1,10 +1,12 @@
 import logging
-from eztaskmanager.models import Log
+
 from django.core.management.base import BaseCommand
+
+from eztaskmanager.models import Log
 
 
 def verbosity2loglevel(verbosity):
-    # Map verbosity level to logging level
+    """Map verbosity level to logging level."""
     level_map = {
         0: logging.ERROR,
         1: logging.WARNING,
@@ -17,12 +19,12 @@ def verbosity2loglevel(verbosity):
 
 
 class LoggerEnabledCommand(BaseCommand):
-    """
-    This class is a subclass of BaseCommand that adds logging functionality to the execute method.
-    """
+    """This class is a subclass of BaseCommand that adds logging functionality to the execute method."""
+
     logger = None
 
     def execute(self, *args, **kwargs):
+        """Override the BaseCommand method, adding stream and Database handlers, if not existing."""
         verbosity = kwargs.get('verbosity', 1)
 
         # Get the logger
@@ -66,11 +68,13 @@ class DatabaseLogHandler(logging.Handler):
         logger.addHandler(log_handler)
         logger.error("An error occurred")
     """
+
     def __init__(self, launch_report_id):
         logging.Handler.__init__(self)
         self.launch_report_id = launch_report_id
 
     def emit(self, record):
+        """Implement the method to send the log message to the DB."""
         log_entry = Log(
             launch_report_id=self.launch_report_id,
             level=record.levelname,

@@ -6,7 +6,9 @@ from eztaskmanager.services.logger import LoggerEnabledCommand
 
 
 class Command(LoggerEnabledCommand):
-    """Command for testing live logger. Perform a simple iteration, up to a maximum limit,
+    """Command for testing live logger.
+
+    Performs a simple iteration, up to a maximum limit,
     sleeping 0.1 seconds between each number generation.
 
     Generates 10 numbers per second, logging them at debug level.

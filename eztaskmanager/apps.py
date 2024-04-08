@@ -14,7 +14,7 @@ class EZTaskmanagerConfig(AppConfig):
     name = "eztaskmanager"
     verbose_name = _("eztaskmanager")
 
-    notification_handlers: Dict[str, "NotificationHandler"] = {}
+    notification_handlers: Dict[str, "NotificationHandler"] = {}  # noqa: F821
 
     def _register_notification_handlers(self) -> None:
         """
