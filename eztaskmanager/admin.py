@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from pytz import timezone
 
 from eztaskmanager.models import AppCommand, TaskCategory, Task, LaunchReport
+from eztaskmanager.services.queues import TaskQueueException
 from eztaskmanager.settings import EZTASKMANAGER_N_LINES_IN_REPORT_LOG, EZTASKMANAGER_SHOW_LOGVIEWER_LINK
 
 
@@ -73,7 +74,7 @@ class BulkDeleteMixin(object):
         Implement __iter__, __getattr__, __getitem__ and __len__ to quack like a dict,
         like django querysets do.
 
-        Implement _safe_delete, invokink delete() on each items in the wrapped_queryset
+        Implement _safe_delete, invoking delete() on each items in the wrapped_queryset
         """
 
         def __init__(self, wrapped_queryset):
@@ -81,11 +82,8 @@ class BulkDeleteMixin(object):
             self.wrapped_queryset = wrapped_queryset
 
         def __getattr__(self, attr):
-            """Getattr method."""
-            if attr == "delete":
-                return self._safe_delete
-            else:
-                return getattr(self.wrapped_queryset, attr, None)
+            """Getattr method"""
+            return self._safe_delete
 
         def __iter__(self):
             """Yeld obj from wrapperd queryset."""
@@ -151,7 +149,7 @@ class LaunchReportMixin(object):
         return lines
 
 
-@admin.register(LaunchReport)
+# @admin.register(LaunchReport)
 class LaunchReportAdmin(LaunchReportMixin, admin.ModelAdmin):
     """Admin options for reports."""
 
@@ -209,23 +207,17 @@ class TaskInline(admin.TabularInline):
     def status_str(self, obj):
         """Return the string representation of status/last result/next ride."""
         status_str = obj.status + "/"
-        last_invocation_dt = convert_to_local_dt(obj.cached_last_invocation_datetime)
-        try:
+        if obj.cached_last_invocation_datetime:
+            last_invocation_dt = convert_to_local_dt(obj.cached_last_invocation_datetime)
             s = (
                 f"{last_invocation_dt}: "
                 f"{obj.cached_last_invocation_result} - "
                 f"{obj.cached_last_invocation_n_errors}E, "
                 f"{obj.cached_last_invocation_n_warnings}W"
             )
-        except AttributeError:
+        else:
             s = "-"
 
-        # if UWSGI_TASKMANAGER_SHOW_LOGVIEWER_LINK:
-        #     from django.utils.html import format_html
-        #
-        #     if obj.last_report:
-        #         last_report_url = reverse("live_log_viewer", args=(obj.last_report.id,))
-        #         s = format_html(f'<a href="{last_report_url}" target="_blank">{s}</a>')
         status_str += s + "/"
         if obj.cached_next_ride:
             s = f"{convert_to_local_dt(obj.cached_next_ride)}"
@@ -262,7 +254,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         "name_desc",
         "invocation",
         "status",
-        "last_result",
+        "last_result_with_logviewer_link",
         "cached_last_invocation_datetime",
         "cached_next_ride",
         "repetition",
@@ -313,7 +305,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         service = get_task_service()
         for task in queryset:
             service.add(task)
-        self.message_user(request, f'{queryset.count()} tasks launched.')
+        self.message_user(request, f'{len(queryset)} tasks launched.')
 
     launch_tasks.short_description = 'Launch selected tasks'
 
@@ -323,7 +315,7 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         service = get_task_service()
         for task in queryset:
             service.remove(task)
-        self.message_user(request, f'{queryset.count()} tasks stopped.')
+        self.message_user(request, f'{len(queryset)} tasks stopped.')
 
     stop_tasks.short_description = 'Stop selected tasks'
 
@@ -350,29 +342,6 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
         )
 
     invocation.short_description = _("Invocation")
-
-    def last_result(self, obj):
-        result = obj.cached_last_invocation_result
-        if result:
-            result = result.upper()
-        bgcolor = 'green'
-        title = _("Show log messages")
-        result_str = result
-        if result == 'WARNINGS':
-            bgcolor = '#CCCC00'
-            result_str = _(f"{obj.cached_last_invocation_n_warnings} WARNINGS")
-        elif result == 'ERRORS':
-            bgcolor = 'orange'
-            result_str = _(f"{obj.cached_last_invocation_n_errors} ERRORS")
-        elif result == 'FAILED':
-            bgcolor = 'red'
-            result_str = _("FAILED")
-
-        s = format_html(
-            f"<b style=\"border-left:10px solid {bgcolor}; padding-left: 5px;\">{result_str}</b>"
-        )
-    last_result.short_description = _("Last result")
-    last_result.admin_order_field = 'cached_last_invocation_result'
 
     def last_result_with_logviewer_link(self, obj):
 
@@ -401,12 +370,18 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
             from eztaskmanager.services.queues import get_task_service
 
             service = get_task_service()
-            service.add(task)
-            self.message_user(
-                request,
-                "This task was successfully launched. Reload the page to see the logs.",
-                level=messages.SUCCESS
-            )
+            try:
+                service.add(task)
+                self.message_user(
+                    request,
+                    "This task was successfully launched. Reload the page to see the logs.",
+                    level=messages.SUCCESS
+                )
+            except TaskQueueException as ex:
+                self.message_user(
+                    request,
+                    ex, level=messages.ERROR
+                )
             return HttpResponseRedirect(".")
         if "_stop-task" in request.POST:
             from eztaskmanager.services.queues import get_task_service

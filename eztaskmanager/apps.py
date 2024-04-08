@@ -8,11 +8,11 @@ from django.utils.translation import gettext_lazy as _
 from eztaskmanager.settings import EZTASKMANAGER_NOTIFICATION_HANDLERS
 
 
-class RQTaskmanagerConfig(AppConfig):
+class EZTaskmanagerConfig(AppConfig):
     """eztaskmanager app configuration."""
 
     name = "eztaskmanager"
-    verbose_name = _("Easy Django Task manager")
+    verbose_name = _("eztaskmanager")
 
     notification_handlers: Dict[str, "NotificationHandler"] = {}
 

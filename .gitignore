@@ -2,3 +2,6 @@
 /.python-version
 /demoproject/db.sqlite3
 /.idea/
+/docs/_build/
+/demoproject/htmlcov/
+/demoproject/staticfiles/

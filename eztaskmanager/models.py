@@ -1,10 +1,10 @@
 import re
 from io import StringIO
-from typing import Dict
 
 from django.apps import apps
 from django.core.management import load_command_class
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from eztaskmanager.settings import EZTASKMANAGER_N_REPORTS_INLINE
@@ -227,10 +227,22 @@ class Task(models.Model):
         blank=True, null=True,
         verbose_name=_("Initial scheduling")
     )
+    @property
+    def scheduling_utc(self):
+        if self.scheduling:
+            return self.scheduling.astimezone(timezone.timezone.utc)
+        else:
+            return None
+
     repetition_period = models.CharField(
         max_length=20, choices=REPETITION_PERIOD_CHOICES, blank=True
     )
     repetition_rate = models.PositiveSmallIntegerField(blank=True, null=True)
+
+    @property
+    def is_periodic(self):
+        """A periodic task is such only if both repetition period and rate are set"""
+        return self.repetition_period is not None and self.repetition_rate is not None
 
     note = models.TextField(
         blank=True, null=True, help_text=_("A note on how this task is used.")
@@ -324,12 +336,13 @@ class Task(models.Model):
             return res
         args = re.split(r"\s*,\s*", self.arguments)
         for arg in args:
-            arg_chunks = arg.split("=")
+            arg_chunks = [x for x in re.split(r"\s*=\s*|\s+", arg) if x]
             argument = arg_chunks[0]
-            try:
-                params = arg_chunks[1]
-            except IndexError:
-                params = None
+            params = arg_chunks[1:] if len(arg_chunks) > 1 else None
+            if params and len(params) > 1:
+                params = ' '.join(params)
+            elif params:
+                params = params[0]
             res[argument] = params
         return res
 

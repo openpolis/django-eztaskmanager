@@ -18,17 +18,7 @@ def verbosity2loglevel(verbosity):
 
 class LoggerEnabledCommand(BaseCommand):
     """
-    Class LoggerEnabledCommand(BaseCommand):
-
-        This class is a subclass of BaseCommand that adds logging functionality to the execute method.
-
-        Attributes:
-        - logger: The logger instance used for logging.
-
-        Methods:
-        - execute(self, *args, **kwargs): Executes the command and logs the execution.
-        - create_parser(self, prog_name, subcommand, **kwargs): Creates a parser for the command.
-
+    This class is a subclass of BaseCommand that adds logging functionality to the execute method.
     """
     logger = None
 
@@ -68,20 +58,13 @@ class DatabaseLogHandler(logging.Handler):
     """
     A handler class that logs messages to a database.
 
-    This class extends the logging.Handler class and provides functionality to log messages to a database. Each log message is saved as a Log object in the database with the launch report
-    *, level, and message attributes.
-
-    Attributes:
-        launch_report_id (ID): The launch report identifier.
-
-    Methods:
-        emit(record): Emits a log message to the database.
+    This class extends the logging.Handler class and provides functionality to log messages to a database.
+    Each log message is saved as a Log object in the database with the launch report level, and message attributes.
 
     Usage:
         log_handler = DatabaseLogHandler("launch_report_1")
         logger.addHandler(log_handler)
         logger.error("An error occurred")
-
     """
     def __init__(self, launch_report_id):
         logging.Handler.__init__(self)

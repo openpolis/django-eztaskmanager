@@ -8,7 +8,9 @@ from eztaskmanager.models import LaunchReport
 
 
 class LogViewerView(TemplateView):
-    """A template view to view the full report log."""
+    """
+    Class LogViewerView displays a log viewer page with log information for a specific report.
+    """
 
     template_name = "log_viewer.html"
 

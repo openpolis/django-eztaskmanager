@@ -85,7 +85,14 @@ def run_management_command(task_id: int):
         task.cached_last_invocation_n_warnings = report.n_log_warnings
         task.cached_last_invocation_datetime = report.invocation_datetime
         task.status = task_original_status
+
         _, task.cached_next_ride = service.fetch_job_with_next_time(task)
+
+        # a non-periodic task is set back to IDLE and its scheduled job id set to None
+        if task.status == Task.STATUS_SCHEDULED and not task.is_periodic:
+            task.status = Task.STATUS_IDLE
+            task.scheduled_job_id = None
+
         task.save()
 
         # Finally, emit notifications

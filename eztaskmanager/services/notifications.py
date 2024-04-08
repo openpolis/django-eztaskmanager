@@ -1,3 +1,4 @@
+import re
 from typing import Union
 
 from django.apps import apps
@@ -42,23 +43,13 @@ def get_base_url():
         >>> get_base_url()
         'example.com'
     """
-    base_url = EZTASKMANAGER_BASE_URL.replace(r".+://", "")
+    base_url = re.sub(r"https?://", "", EZTASKMANAGER_BASE_URL)
     return apps.get_app_config("sites").get_current().domain or base_url
 
 
 class NotificationHandler(ABC):
-    """NotificationHandler Class
-
+    """
     An abstract base class for handling notifications.
-
-    Attributes:
-        level (int): The minimum level of notifications to handle.
-
-    Methods:
-        __init__(self, level=0): Initializes a new instance of the NotificationHandler class.
-        handle(self, report): Handles a notification report.
-        emit(self, report): Abstract method for emitting a notification.
-
     """
     def __init__(self, level: Union[int, str]=0):
         self.level = level if isinstance(level, int) else LEVEL_MAPPING.get(level, 0)
@@ -70,26 +61,21 @@ class NotificationHandler(ABC):
             return self.emit(report)
 
     @abstractmethod
-    def emit(self, report):
+    def emit(self, report):  # pragma: no cover
         raise NotImplementedError
 
 
 class SlackNotificationHandler(NotificationHandler):
     """
-    SlackNotificationHandler class
-
     This class is a notification handler that sends notifications to a specified Slack channel using the Slack API.
 
-    Attributes:
+    Params:
         client (slack_sdk.WebClient): The Slack WebClient object used to interact with the Slack API.
         channel (str): The Slack channel to which the notifications will be sent.
         level (int): The log level at which notifications will be sent.
 
     Methods:
-        __init__(token, channel, level)
-            Initializes a new instance of the SlackNotificationHandler class.
-        emit(report)
-            Sends a notification to the Slack channel with information from the given report.
+        emit(report): Sends an email notification based on the given report.
 
     """
     def __init__(self, token, channel, level):
@@ -113,7 +99,8 @@ class SlackNotificationHandler(NotificationHandler):
             {"type": "section", "text": {"type": "mrkdwn", "text": formatted_message, }},
             {"type": "context", "elements": [
                 {"type": "mrkdwn",
-                 "text": f"<http://{get_base_url()}{reverse('live_log_viewer', args=(report.id,))}|Full logs>"},
+                 "text": f"<http://{get_base_url()}"
+                         f"{reverse('eztaskmanager:live_log_viewer', args=(report.id,))}|Full logs>"},
             ]},
             {"type": "section", "text": {"type": "mrkdwn", "text": "Logs tail:\n" f"```{report.log_tail()}```", }},
         ]
