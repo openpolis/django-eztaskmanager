@@ -182,7 +182,7 @@ Visit http://127.0.0.1:8000/admin/
 
 **Django uWSGI taskmanager** is an application to manage async tasks via admin interface, using uWSGI spooler.
 
-Copyright (c) 2024- Guglielmo Celata, Fondazione Openpolis
+Copyright (c) 2024 Guglielmo Celata, Fondazione Openpolis
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
