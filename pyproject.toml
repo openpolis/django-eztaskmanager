@@ -7,7 +7,7 @@ authors = ["Guglielmo Celata <guglielmo@openpolis.it>"]
 readme = "README.md"
 homepage = "https://github.com/openpolis/django-eztaskmanager.git"
 repository = "https://github.com/openpolis/django-eztaskmanager.git"
-documentation = "{IfYouHaveDocumentationLinkPutItHere}"
+documentation = "https://django-eztaskmanager.readthedocs.io"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
