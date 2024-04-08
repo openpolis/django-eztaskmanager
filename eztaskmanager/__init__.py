@@ -1,4 +1,4 @@
-"""Django application to manage async tasks via admin interface, using uWSGI spooler."""
+"""Django application to manage async tasks via admin interface"""
 
 # PEP 440 - version number format
 VERSION = (0, 1, 0)

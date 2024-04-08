@@ -95,7 +95,7 @@ class SlackNotificationHandler(NotificationHandler):
         )
 
         blocks = [
-            {"type": "context", "elements": [{"type": "mrkdwn", "text": "django-uwsgi-taskmanager", }]},
+            {"type": "context", "elements": [{"type": "mrkdwn", "text": "django-eztaskmanager", }]},
             {"type": "section", "text": {"type": "mrkdwn", "text": formatted_message, }},
             {"type": "context", "elements": [
                 {"type": "mrkdwn",

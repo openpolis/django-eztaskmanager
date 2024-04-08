@@ -330,7 +330,7 @@ class TestSlackNotificationHandler(TestCase):
 
         expected_channel = channel
         expected_blocks = [
-            {"type": "context", "elements": [{"type": "mrkdwn", "text": "django-uwsgi-taskmanager"}]},
+            {"type": "context", "elements": [{"type": "mrkdwn", "text": "django-eztaskmanager"}]},
             {"type": "section", "text": {"type": "mrkdwn", "text": formatted_message}},
             {"type": "context", "elements": [{"type": "mrkdwn", "text": "<http://test.com{}|Full logs>".format(
                 reverse('eztaskmanager:live_log_viewer', args=(mock_report.id,)))}]},

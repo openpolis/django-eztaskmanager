@@ -12,7 +12,7 @@ Django application to manage common django management tasks
 
 Main **features**:
 
-- use standard django management commands as tasks 'templates',
+- use standard django management commands as tasks *templates*,
 - import available management commands through a meta-management command, as possible templates for tasks,
 - start and stop tasks manually via admin,
 - schedule point and periodic tasks via django admin,
