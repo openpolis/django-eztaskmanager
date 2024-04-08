@@ -1,7 +1,8 @@
 Integrating django-eztaskmanager into an existing project
 ---------------------------------------------------------
 
-This guide is designed for **developers** who wish to incorporate `django-eztaskmanager` into their existing Django project.
+This guide is designed for **developers** who wish to incorporate `django-eztaskmanager`
+into their existing Django project.
 
 0.  Install the application using `pip`:
 

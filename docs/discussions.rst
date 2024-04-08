@@ -2,53 +2,54 @@ Discussions
 ===========
 
 
-Although `Celery`_ is the most used solution to execute
-`distributed asynchronous tasks in python`_ and django-channels_ is the new hype,
-this project offers a solution based on `uWSGI spooler`_,
-which requires no additional components, is particularly easy to setup,
-and has a `straight learning curve`_.
-
-.. _Django management tasks: https://docs.djangoproject.com/en/2.1/howto/custom-management-commands/
-.. _Celery: http://www.celeryproject.org/
-.. _distributed asynchronous tasks in python: https://realpython.com/asynchronous-tasks-with-django-and-celery/
-.. _django-channels: https://blog.heroku.com/in_deep_with_django_channels_the_future_of_real_time_apps_in_django
-.. _straight learning curve: https://blog.selectel.com/uwsgi-spooler/
-.. _uWSGI spooler: https://uwsgi-docs.readthedocs.io/en/latest/Spooler.html?highlight=spooler
-
-
-.. _uwsgi-server:
-
-Pre-requisites
---------------
-uWSGI is normally used ad an application server, to accept requests, transfer control to the python
-web application using the wsgi protocol, and send the response back.
-
-If configured as shown in this documentation, it can spawn some processes to handle asynchronous
-tasks, reading the queue from a specified *spool* directory.
 
 
 .. image:: _static/images/django_rq_async.png
   :width: 400
   :alt: The role of the spooler
 
+Interface for complex tasks Django ecosystem
+--------------------------------------------
+Managing and maintaining a Django-based application involves executing complex tasks such as, for example,
+Extract, Transform, and Load (ETL) operations, cleanup operations, indexing, ....
+While these tasks are fundamental for data management/warehousing,
+their manual execution can be laborious and prone to errors.
 
-The following snippet of code starts a uWSGI server able to process both
-HTTP requests and asynchronous tasks [#uwsgiproduction]_:
+Providing a dedicated interface for such operations not only streamlines the process
+but also enhances efficiency and reduces potential mistakes that can arise from manual intervention.
 
-.. code-block:: bash
+An automated, seamless and robust system is thus crucial in handling such operations.
+This offers benefits in terms of task efficiency, reduction of manual intervention,
+and elimination of potential errors that can arise from manual process steps.
 
-    uwsgi --check-static=./static --http=:8000 --master \
-      --module=wsgi --callable=application \
-      --pythonpath=./ \
-      --processes=4 --spooler=./uwsgi-spooler --spooler-processes=2
+Integration into Django admin site
+----------------------------------
 
-- 4 processes will accept HTTP requests and send HTTP responses;
-- 2 processes will check the spooler and execute tasks there;
-- 1 master process will superintend all other processes.
-- the ``./uwsgi-spooler`` path is the physical location on disk
-  where the spooled tasks will be kept
+Equally crucial is the requirement for the said interface to be integrated within the native Django admin site.
+The rationale behind this is to bring about ease of use and accessibility particularly
+to non-technical personnel who need to interact with the system.
 
+The Django admin site provides an out-of-the-box, user-friendly GUI that simplifies the management tasks.
+Therefore, integrating the custom interface into the Django admin site will offer
+non-technical users a familiar and intuitive environment to execute complex tasks without
+the need to write or understand code.
 
-.. rubric:: Footnotes
-.. [#uwsgiproduction] Setting up uWSGI in production usually involves some sort of frontend proxy,
-    but this is not the place to discuss it.
+Use of a Queue Manager
+----------------------
+
+A key component in managing and executing complex tasks is the use of a job or task queue manager.
+In the context of Python and Django, robust queue managers namely RQ (Redis Queue) and Celery
+stand out as the most popular options. These tools facilitate the management and processing of asynchronous
+tasks which are queued and executed based on priority, scheduled time, or other custom logic.
+
+The need for such a setup arises from the inherent complexity of managing multiple long-running tasks,
+each possibly varying in computational requirements. Without a queue manager, the system risks running into
+resource allocation issues, redundancy, and failure in task execution.
+In contrast, utilizing a queue manager provides control over resource allocation,
+task prioritization and consequently, a more efficient and reliable system.
+Choosing between RQ and Celery will depend on specific application requirements,
+although either will contribute significantly to streamline task management.
+
+In conclusion, integrating an interface for complex operations into the Django admin site,
+and utilizing a reliable queue manager, are essential steps towards efficient and reliable
+Django application management, particularly for non-technical users.

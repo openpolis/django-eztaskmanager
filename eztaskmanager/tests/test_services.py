@@ -1,8 +1,10 @@
 # Unittest Test case
+from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 import eztaskmanager
 from eztaskmanager.models import Task, LaunchReport
@@ -52,7 +54,7 @@ class TestRQTaskQueueService(TestCase):
     @patch('django_rq.get_scheduler', return_value=MagicMock())
     @patch('eztaskmanager.services.run_management_command')
     @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
-    def test_add(
+    def test_add_non_periodic_task(
             self,
             mock_fetch_job_with_next_time, mock_run_management_command,
             mock_get_scheduler, mock_get_queue
@@ -62,8 +64,63 @@ class TestRQTaskQueueService(TestCase):
 
         # Create a mock Task instance
         mock_task = MagicMock()
-        mock_task.scheduling = True
-        mock_task.interval_in_seconds = 5
+        mock_task.scheduling = (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")
+        mock_task.scheduling_utc = timezone.make_aware(
+            datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+        )
+        mock_task.interval_in_seconds = None
+        mock_task.is_periodic = False
+        mock_task.id = 1
+
+        # mock fetch_job_with_next_time to return a demonstration value
+        mock_fetch_job_with_next_time.return_value = ('Demo Ride', 'Demo time')
+
+        # mock run_management_command to return a demonstration value
+        mock_run_management_command.return_value = 'Demo Value'
+
+        # determine the return value of scheduler.schedule and queue.enqueue
+        mock_rq_enqueued_job = MagicMock(id='001-002-003-004')
+        service.scheduler.enqueue_at.return_value = mock_rq_enqueued_job
+
+        # Call the method
+        service.add(mock_task)
+
+        # Assert the methods were called with the right parameters
+        service.scheduler.enqueue_at.assert_called_once_with(
+            mock_task.scheduling_utc,
+            mock_run_management_command, mock_task.id
+        )
+
+        # Assert that the task has been assigned the correct attributes
+        self.assertEqual(mock_task.scheduled_job_id, mock_rq_enqueued_job.id)
+        self.assertEqual(mock_task.status, Task.STATUS_SCHEDULED)
+        self.assertEqual(mock_task.cached_next_ride, mock_fetch_job_with_next_time.return_value[1])
+
+        # If the task does not contain the schedule attribute, the queue.enqueue method should be called
+        mock_task.scheduling = None
+        service.add(mock_task)
+        service.queue.enqueue.assert_called_once_with(mock_run_management_command, mock_task.id)
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_add_periodic_task(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        # Create the instance of the RQTaskQueueService
+        service = RQTaskQueueService()
+
+        # Create a mock Task instance
+        mock_task = MagicMock()
+        mock_task.scheduling = (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")
+        mock_task.scheduling_utc = timezone.make_aware(
+            datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+        )
+        mock_task.interval_in_seconds = 86400
+        mock_task.is_periodic = True
         mock_task.id = 1
 
         # mock fetch_job_with_next_time to return a demonstration value
@@ -83,7 +140,7 @@ class TestRQTaskQueueService(TestCase):
 
         # Assert the methods were called with the right parameters
         service.scheduler.schedule.assert_called_once_with(
-            mock_task.scheduling,
+            mock_task.scheduling_utc,
             mock_run_management_command, [mock_task.id],
             interval=mock_task.interval_in_seconds,
             result_ttl=int(1.5 * mock_task.interval_in_seconds)
@@ -111,18 +168,19 @@ class TestRQTaskQueueService(TestCase):
         # Setup
         service = RQTaskQueueService()
         mock_task = MagicMock()
+        mock_task.scheduling = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")
+        mock_task.scheduling_utc = timezone.make_aware(
+            datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+        )
         mock_run_management_command.return_value = 'Demo Value'
         mock_fetch_job_with_next_time.return_value = ('Demo Ride', 'Demo time')
-
-        # Simulating exception in scheduler.schedule
-        service.scheduler.schedule.side_effect = Exception("Failed to schedule")
 
         # Call the method and assert it raises the expected exception
         with self.assertRaises(TaskQueueException) as context:
             service.add(mock_task)
 
         # Assert the exception message is as expected
-        self.assertTrue('Failed to add task' in str(context.exception))
+        self.assertTrue('It is not possible to schedule tasks in the past' in str(context.exception))
 
     @patch('django_rq.get_scheduler', return_value=MagicMock())
     @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
@@ -194,14 +252,15 @@ class TestRQTaskQueueService(TestCase):
 
         # mock the return value of scheduler.get_jobs
         mock_job = MagicMock(id='job-id')
-        service.scheduler.get_jobs.return_value = [(mock_job, 'next_time')]
+        next_time = datetime.now() + timedelta(days=1)
+        service.scheduler.get_jobs.return_value = [(mock_job, next_time)]
 
         # Call the method
-        job, next_time = service.fetch_job_with_next_time(mock_task)
+        job, next_run_time = service.fetch_job_with_next_time(mock_task)
 
         # Assert the method returns the correct job and next_time
         self.assertEqual(job, mock_job)
-        self.assertEqual(next_time, 'next_time')
+        self.assertEqual(next_run_time, timezone.make_aware(next_time, timezone=timezone.timezone.utc))
 
     @patch('django_rq.get_scheduler', return_value=MagicMock())
     def test_fetch_job_with_next_time_job_not_exists(self, mock_scheduler):
