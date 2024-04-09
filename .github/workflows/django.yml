@@ -28,10 +28,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install poetry
         poetry install
-    - name: Activate virtual environment
-      run: source ${{ env.pythonLocation }}/bin/activate
     - name: Check installed packages
-      run: pip list
+      run: poetry show
     - name: Test with Django's test framework
       run: python demoproject/manage.py test
       
