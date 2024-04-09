@@ -10,7 +10,7 @@ django-eztaskmanager documentation
 This is done through a conventional Django administrative interface, using either `RQ`_ or, in the near future,
 `Celery`_.
 
-**django-eztaskmanager** is both an evolution and upgrade from
+**django-eztaskmanager** is both an evolution and an upgrade from
 our previous django-uwsgi-taskmanager_; it comes with these key **features**:
 
 - usage of standard Django management commands as task *templates*;
