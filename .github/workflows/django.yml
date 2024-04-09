@@ -30,6 +30,8 @@ jobs:
         poetry install
     - name: Check installed packages
       run: poetry show
+    - name: Show PYTHONPATH value
+      run: echo "PYTHONPATH=$PYTHONPATH"
     - name: Test with Django's test framework
       run: python demoproject/manage.py test
       
