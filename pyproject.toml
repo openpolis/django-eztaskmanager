@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-eztaskmanager"
-version = "0.3.4"
+version = "0.3.5"
 packages = [{include = "eztaskmanager"}]
 description = "Django application that allows the management of scheduled, long, asynchronous tasks."
 license = "MIT License"
