@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "eztaskmanager"
+name = "django-uwsgi-eztaskmanager"
 version = "0.1.0"
 description = "Django application that allows the management of scheduled, long, asynchronous tasks."
 license = "MIT License"
