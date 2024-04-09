@@ -43,9 +43,9 @@ There's a suite of unit tests. Run them with:
 
     python demoproject/manage.py test
 
-Source code syntax and formatting are validated using black_.
+Source code syntax and formatting are validated using flake8.
 
 
 .. _sphinx: https://www.sphinx-doc.org/en/master/index.html
 .. _guidelines for creating technical documentation: https://www.divio.com/blog/documentation/
-.. _black: https://black.readthedocs.io/en/stable/
+.. _flake8: https://flake8.pycqa.org/en/latest/
