@@ -47,6 +47,13 @@ slack-sdk = "^3.27.1"
 sphinx-rtd-theme = "^2.0.0"
 
 
+[tool.poetry.group.testdj4.dependencies]
+python = ">=3.9"
+django = "4.2.11"
+pytz = "^2024.1"
+django-rq = "^2.10.2"
+rq-scheduler = "^0.13.1"
+
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.22.2"
 uvicorn = "^0.29.0"
