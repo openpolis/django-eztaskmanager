@@ -120,8 +120,8 @@ class BulkDeleteMixin(object):
         That a confirmation form is presented to the user before deletion,
         and delete() is overridden with _safe_delete()
         """
-        wrapped_queryset = BulkDeleteMixin.SafeDeleteQuerysetWrapper(queryset)
-        return delete_selected(self, request, wrapped_queryset)
+        qs_wrapper = BulkDeleteMixin.SafeDeleteQuerysetWrapper(queryset)
+        return delete_selected(self, request, qs_wrapper.wrapped_queryset)
 
 
 class LaunchReportMixin(object):
