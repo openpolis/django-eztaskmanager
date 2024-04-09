@@ -28,8 +28,6 @@ jobs:
         poetry install
     - name: Check installed packages
       run: poetry show
-    - name: Whhic python am I using?
-      run: which python
     - name: Test with Django's test framework
-      run: python demoproject/manage.py test
+      run: poetry run demoproject/manage.py test
       
