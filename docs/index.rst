@@ -11,17 +11,7 @@ This is done through a conventional Django administrative interface, using eithe
 `Celery`_.
 
 **django-eztaskmanager** is both an evolution and upgrade from
-our previous django-uwsgi-taskmanager_.
-
-The key change is that it operates *independently* from the application server,
-like gunicorn or uvicorn. This means it doesn't get in the way of your application's processes.
-Moreover, it's built to integrate seamlessly with Redis, a caching solution that's likely
-part of your current tech stack, for a fit so comfortable you'll hardly notice it's there.
-
-This tool provides a hands-off experience for developers and an empowering one for non-technical users,
-bridging the gap between the two.
-
-**django-eztaskmanager** comes loaded with key **features**:
+our previous django-uwsgi-taskmanager_; it comes with these key **features**:
 
 - usage of standard Django management commands as task *templates*;
 - capability to import existing management commands through a meta-management command;
