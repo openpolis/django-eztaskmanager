@@ -43,12 +43,11 @@ jobs:
       uses: actions/setup-python@main
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies from pyproject.toml
+    - name: Install just the right package for testing
       run: |
         python -m pip install --upgrade pip
-        pip install poetry
-        poetry add django==5 pytz django-rq rq-scheduler
-    - name: Test with Django 5
+        pip install django==5 pytz django-rq rq-scheduler
+    - name: Run tests
       run: |
         rm -rf demoproject/staticfiles/*
         poetry run demoproject/manage.py test
@@ -67,12 +66,11 @@ jobs:
       uses: actions/setup-python@main
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies from pyproject.toml
+    - name: Install just the right package for testing
       run: |
         python -m pip install --upgrade pip
-        pip install poetry
-        poetry add django==4.2 pytz django-rq rq-scheduler
-    - name: Test with Django 4.2
+        pip install django==4.2 pytz django-rq rq-scheduler
+    - name: Run tests
       run: |
         rm -rf demoproject/staticfiles/*
         poetry run demoproject/manage.py test
