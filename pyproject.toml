@@ -33,8 +33,8 @@ keywords = ["async", "cron", "django", "commands", "manager", "queues", "task", 
 
 
 [tool.poetry.dependencies]
-python = ">=3.10"
-django = ">=3.2"
+python = "^3.8.19"
+django = "4.2.11"
 pytz = "^2024.1"
 django-rq = "^2.10.2"
 rq-scheduler = "^0.13.1"
@@ -45,27 +45,28 @@ celery = {extras = ["redis"], version = "^5.3.6"}
 beautifulsoup4 = "^4.12.3"
 slack-sdk = "^3.27.1"
 sphinx-rtd-theme = "^2.0.0"
+ipython = "^8.12.0"
 
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.22.2"
+ipython = "^8.12.0"
 uvicorn = "^0.29.0"
 coverage = "^7.4.4"
 black = "^24.3.0"
 bump2version = "^1.0.1"
-flake8 = "^7.0.0"
+flake8 = "^6.1.0"
 flake8-isort = "^6.1.1"
 flake8-docstrings = "^1.7.0"
-flake8-bugbear = "^24.2.6"
+flake8-bugbear = "^23.11.28"
 mypy = "^1.9.0"
 pytz = "^2024.1"
-pre-commit = "^3.7.0"
+pre-commit = "^3.4.0"
 
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^7.2.6"
+sphinx = "^7.0.0"
 sphinx-django-command = "^0.1.3"
-sphinx-autobuild = "^2024.2.4"
+sphinx-autobuild = "^2021.3.14"
 pyembed-rst = "^1.1.0"
 
 [tool.poetry.extras]
