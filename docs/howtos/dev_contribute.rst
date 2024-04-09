@@ -43,7 +43,7 @@ There's a suite of unit tests. Run them with:
 
     python demoproject/manage.py test
 
-Source code syntax and formatting are validated using flake8.
+Source code syntax and formatting are validated using flake8_.
 
 
 .. _sphinx: https://www.sphinx-doc.org/en/master/index.html
