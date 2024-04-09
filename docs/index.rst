@@ -10,11 +10,10 @@ django-eztaskmanager documentation
 This is done through a conventional Django administrative interface, using either `RQ`_ or, in the near future,
 `Celery`_.
 
-Introducing django-eztaskmanager – a tool designed to put the control of managing and monitoring
-asynchronous tasks into the hands of non-technical users. It's both an evolution and upgrade from
+**django-eztaskmanager** is both an evolution and upgrade from
 our previous django-uwsgi-taskmanager_.
 
-The key change is that django-eztaskmanager operates independently from the application server,
+The key change is that it operates *independently* from the application server,
 like gunicorn or uvicorn. This means it doesn't get in the way of your application's processes.
 Moreover, it's built to integrate seamlessly with Redis, a caching solution that's likely
 part of your current tech stack, for a fit so comfortable you'll hardly notice it's there.
