@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.10']
+        python-version: ['3.10', 3.11, 3.12]
 
     steps:
     - uses: actions/checkout@v3
@@ -26,8 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install poetry
         poetry install
-    - name: Check installed packages
-      run: poetry show
     - name: Test with Django's test framework
       run: poetry run demoproject/manage.py test
       
