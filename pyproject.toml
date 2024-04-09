@@ -46,6 +46,26 @@ beautifulsoup4 = "^4.12.3"
 slack-sdk = "^3.27.1"
 sphinx-rtd-theme = "^2.0.0"
 
+[tool.poetry.testdj5.dependencies]
+python = ">=3.10"
+django = "^5.0.4"
+pytz = "^2024.1"
+django-rq = "^2.10.2"
+rq-scheduler = "^0.13.1"
+django-extensions = "^3.2.3"
+gnureadline = "^8.1.2"
+whitenoise = "^6.6.0"
+
+[tool.poetry.testdj4.dependencies]
+python = ">=3.9"
+django = "4.2.11"
+pytz = "^2024.1"
+django-rq = "^2.10.2"
+rq-scheduler = "^0.13.1"
+django-extensions = "^3.2.3"
+gnureadline = "^8.1.2"
+whitenoise = "^6.6.0"
+
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.22.2"
