@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.10', 3.11, 3.12]
+        python-version: ['3.10']
 
     steps:
     - uses: actions/checkout@v3
@@ -21,8 +21,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Print environment variables
-      run: echo "PYTHON_LOCATION=$PYTHON_LOCATION"
     - name: Install dependencies from pyproject.toml
       run: |
         python -m pip install --upgrade pip
@@ -30,8 +28,8 @@ jobs:
         poetry install
     - name: Check installed packages
       run: poetry show
-    - name: Show PYTHONPATH value
-      run: echo "PYTHONPATH=$PYTHONPATH"
+    - name: What is my current directory
+      run: pwd
     - name: Test with Django's test framework
       run: python demoproject/manage.py test
       
