@@ -9,7 +9,7 @@ jobs:
 
   deploy:
     name: Build and publish distributions to PyPI
-    runs-on: latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@main
