@@ -1,4 +1,4 @@
-name: Django CI
+name: on push lint and test
 
 on:
   push:
