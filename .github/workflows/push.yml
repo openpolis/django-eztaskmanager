@@ -50,7 +50,7 @@ jobs:
     - name: Run tests
       run: |
         rm -rf demoproject/staticfiles/*
-        poetry run demoproject/manage.py test
+        python demoproject/manage.py test
 
   dj4:
     needs: lint-check
@@ -73,7 +73,7 @@ jobs:
     - name: Run tests
       run: |
         rm -rf demoproject/staticfiles/*
-        poetry run demoproject/manage.py test
+        python demoproject/manage.py test
 
 #  dj32:
 #    needs: lint-check
