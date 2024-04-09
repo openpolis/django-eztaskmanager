@@ -27,13 +27,11 @@ jobs:
           flake8 demoproject --exclude demoproject/static --exclude demoproject/migrations,demoproject/tests --count --ignore=D100,D104,D105,D106,D107  --max-line-length=120 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 --exclude demoproject/static --exclude demoproject/migrations,demoproject/tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-
   dj5:
     needs: lint-check
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
         python-version: ['3.10', 3.11, 3.12]
 
@@ -81,7 +79,7 @@ jobs:
     needs: lint-check
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 5
       matrix:
         python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
 
