@@ -10,9 +10,18 @@ The abstract TaskQueueService class is the interface each class has to implement
 import datetime
 from abc import ABC, abstractmethod
 
-import django_rq
-from celery import Celery, shared_task
 from django.utils import timezone
+
+try:
+    import django_rq
+except ImportError:
+    django_rq = None
+    try:
+        from celery import Celery, shared_task
+    except ImportError:
+        celery = None
+        raise ImportError("Both django_rq and Celery packages are not installed.")
+
 from django.utils.translation import gettext_lazy as _
 
 from eztaskmanager.models import Task
