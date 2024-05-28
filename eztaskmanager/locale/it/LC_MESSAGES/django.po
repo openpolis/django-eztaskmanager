@@ -1,0 +1,205 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-28 17:17+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: admin.py:113
+#, python-format
+msgid "Delete selected %(verbose_name_plural)s"
+msgstr "Elimina %(verbose_name_plural)s nella selezione"
+
+#: admin.py:334
+msgid "Repetition rate"
+msgstr "Tasso di ripetizione"
+
+#: admin.py:342
+msgid "Name"
+msgstr "Nome"
+
+#: admin.py:351
+msgid "Invocation"
+msgstr "Chiamata"
+
+#: admin.py:356
+msgid "Show log messages"
+msgstr "Mostra i messaggi di log"
+
+#: admin.py:365 models.py:272
+msgid "Last result"
+msgstr "Ultimo risultato"
+
+#: apps.py:15
+msgid "eztaskmanager"
+msgstr "eztaskmanager"
+
+#: models.py:39 templates/live_log_viewer.html:238
+msgid "Command"
+msgstr "Comando"
+
+#: models.py:40
+msgid "Commands"
+msgstr "Comandi"
+
+#: models.py:176
+msgid "Task category"
+msgstr "Categoria di task"
+
+#: models.py:177
+msgid "Tasks categories"
+msgstr "Categorie di task"
+
+#: models.py:217
+msgid ""
+"Separate arguments with a comma \",\"and parameters with a blank space \" "
+"\". eg: -f, --secondarg param1 param2, --thirdarg=pippo, --thirdarg"
+msgstr ""
+"Separa gli argomenti con una virgola \",\" e i parametri con uno spazio "
+"bianco \" \". es: -f, --secondoarg param1 param2, --terzoarg=pippo, --"
+"quartoarg"
+
+#: models.py:227
+msgid "Choose a category for this task"
+msgstr "Scegli una categoria per questo task"
+
+#: models.py:234
+msgid "Initial scheduling"
+msgstr "Programmazione iniziale"
+
+#: models.py:256
+msgid "A note on how this task is used."
+msgstr "Una nota su come viene utilizzato questo task."
+
+#: models.py:262
+msgid "A unique identifier for the scheduled job, if any"
+msgstr "Un identificativo unico per il job pianificato, se presente"
+
+#: models.py:265
+msgid "Last datetime"
+msgstr "Ultima data e ora"
+
+#: models.py:275
+msgid "Errors"
+msgstr "Errori"
+
+#: models.py:278
+msgid "Warnings"
+msgstr "Avvertenze"
+
+#: models.py:281
+msgid "Next execution time"
+msgstr "Prossimo orario di esecuzione"
+
+#: models.py:433
+msgid "Task"
+msgstr "Task"
+
+#: models.py:434
+msgid "Tasks"
+msgstr "Task"
+
+#: services/queues.py:78
+msgid "It is not possible to schedule tasks in the past"
+msgstr "Non è possibile pianificare task nel passato"
+
+#: services/queues.py:105
+#, python-brace-format
+msgid "Failed to add task: {e}"
+msgstr "Impossibile aggiungere il task: {e}"
+
+#: templates/admin/appcommand_changeform.html:7
+msgid "Help text"
+msgstr "Testo di aiuto"
+
+#: templates/admin/edit_inline/tabular_reports.html:20
+msgid "Delete?"
+msgstr "Eliminare?"
+
+#: templates/admin/edit_inline/tabular_reports.html:34
+msgid "Change"
+msgstr "Cambia"
+
+#: templates/admin/edit_inline/tabular_reports.html:36
+msgid "View on site"
+msgstr "Visualizza sul sito"
+
+#: templates/live_log_viewer.html:7 templates/log_viewer.html:7
+msgid "Log viewer"
+msgstr "Visualizzatore del log"
+
+#: templates/live_log_viewer.html:157
+msgid "Show all messages"
+msgstr "Mostra tutti i messaggi"
+
+#: templates/live_log_viewer.html:163
+msgid "Show only debug messages"
+msgstr "Mostra solo i messaggi di debug"
+
+#: templates/live_log_viewer.html:169
+msgid "Show only info messages"
+msgstr "Mostra solo i messaggi informativi"
+
+#: templates/live_log_viewer.html:175
+msgid "Show only warnings"
+msgstr "Mostra solo avvertenze"
+
+#: templates/live_log_viewer.html:181
+msgid "Show only errors"
+msgstr "Mostra solo errori"
+
+#: templates/live_log_viewer.html:188
+msgid "Search text in messages"
+msgstr "Cerca il testo nei messaggi"
+
+#: templates/live_log_viewer.html:192
+msgid "Reset filters"
+msgstr "Reimposta filtri"
+
+#: templates/live_log_viewer.html:201
+msgid "Raw log messages"
+msgstr "Messaggi di log grezzi"
+
+#: templates/live_log_viewer.html:209
+msgid "Click to flip stickiness (follows log messages)"
+msgstr "Fai clic per invertire l'adesività (segue i messaggi di log)"
+
+#: templates/live_log_viewer.html:217
+msgid "Click to flip line wraps (improve readability of long lines)"
+msgstr ""
+"Fai clic per invertire il ritorno a capo delle linee (migliora la "
+"leggibilità delle righe lunghe)"
+
+#: templates/live_log_viewer.html:239
+msgid "Arguments"
+msgstr "Parametri"
+
+#: templates/live_log_viewer.html:245
+msgid "Launched at"
+msgstr "Lanciato alle"
+
+#: templates/live_log_viewer.html:246
+msgid "Current status"
+msgstr "Stato attuale"
+
+#: views.py:28 views.py:101
+#, python-brace-format
+msgid "No log for the report {pk}."
+msgstr "Nessun log per il rapporto {pk}."
+
+#: views.py:43
+msgid "The available levels are: ERROR or WARNING"
+msgstr "I livelli disponibili sono: ERRORE o AVVERTENZA"
