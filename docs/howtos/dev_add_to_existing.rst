@@ -25,7 +25,7 @@ into their existing Django project.
         INSTALLED_APPS = [
             "django.contrib.admin",
             # ...,
-            "taskmanager",
+            "eztaskmanager",
         ]
 
 2. Install and configure 'django-rq' and 'django-scheduler' or 'celery' and 'celery-beats' if they are not already included in your project.
