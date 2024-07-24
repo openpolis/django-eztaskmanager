@@ -235,13 +235,14 @@ class TestRQTaskQueueService(TestCase):
             # Create the instance of the RQTaskQueueService
             service = RQTaskQueueService()
 
-            # Create a mock Task instance
+            # Create a mock Task instance in Started status
             mock_task = MagicMock()
-            mock_task.scheduled_job_id = None
-            mock_task.cached_next_ride = None
-            mock_task.status = Task.STATUS_SCHEDULED
+            mock_task.scheduled_job_id = 'job-id'
+            mock_task.cached_next_ride = (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.status = Task.STATUS_STARTED
 
             # mock the return value of fetch_job_with_next_time
+            # no job is found (there's some sort of condition)
             mock_fetch_job_with_next_time.return_value = (None, None)
 
             # Call the method
@@ -253,11 +254,12 @@ class TestRQTaskQueueService(TestCase):
             # Assert scheduler.cancel was not called
             service.scheduler.cancel.assert_not_called()
 
-            # Assert the task attributes were not updated
+            # Assert the task attributes were reset
+            # The task status is now Idle
             assert not mock_task.scheduled_job_id
             assert not mock_task.cached_next_ride
-            assert not mock_task.status == Task.STATUS_IDLE
-            mock_task.save.assert_not_called()
+            assert mock_task.status == Task.STATUS_IDLE
+            mock_task.save.assert_called()
 
     @patch('django_rq.get_scheduler', return_value=MagicMock())
     def test_fetch_job_with_next_time_job_exists(self, mock_get_scheduler):
