@@ -122,10 +122,11 @@ try:
 
             if job:
                 self.scheduler.cancel(job)
-                task.scheduled_job_id = None
-                task.cached_next_ride = None
-                task.status = Task.STATUS_IDLE
-                task.save()
+
+            task.scheduled_job_id = None
+            task.cached_next_ride = None
+            task.status = Task.STATUS_IDLE
+            task.save()
 
     available_service = RQTaskQueueService
 
