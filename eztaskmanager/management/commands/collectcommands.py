@@ -1,12 +1,12 @@
 """Collect task command."""
 
 from django.core.management import get_commands
-from django.core.management.base import BaseCommand
 
 from eztaskmanager.models import AppCommand
+from eztaskmanager.services.logger import LoggerEnabledCommand
 
 
-class Command(BaseCommand):
+class Command(LoggerEnabledCommand):
     """Collect all the available commands and sync them with the database."""
 
     help = "Collect all the available commands and sync them with the database"

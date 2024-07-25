@@ -1,9 +1,9 @@
 """Test command."""
 
-from django.core.management.base import BaseCommand
+from eztaskmanager.services.logger import LoggerEnabledCommand
 
 
-class Command(BaseCommand):
+class Command(LoggerEnabledCommand):
     """Command for test purpose."""
 
     help = "Command for test purpose"
