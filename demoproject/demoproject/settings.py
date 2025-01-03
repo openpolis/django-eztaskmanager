@@ -142,7 +142,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 RQ_QUEUES = {
     'default': {
         'URL': 'redis://localhost:6379',  # Adjust to your Redis config
-        'DEFAULT_TIMEOUT': 360,
+        'DEFAULT_TIMEOUT': 3600,
     },
 }
 

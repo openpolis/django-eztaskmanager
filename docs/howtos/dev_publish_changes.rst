@@ -1,4 +1,4 @@
-The package is published on https://github.com/openpolis/django-eztaskmanager.
+    The package is published on https://github.com/openpolis/django-eztaskmanager.
 
 This is the procedure to follow.
 
