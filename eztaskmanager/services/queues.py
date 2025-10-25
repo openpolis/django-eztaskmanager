@@ -8,6 +8,7 @@ The abstract TaskQueueService class is the interface each class has to implement
 - CeleryTaskQueueService implements the service with Celery (TBD)
 """
 import datetime
+import logging
 from abc import ABC, abstractmethod
 
 from django.utils import timezone
@@ -15,6 +16,8 @@ from django.utils.translation import gettext_lazy as _
 
 from eztaskmanager.settings import EZTASKMANAGER_QUEUE_SERVICE_TYPE
 from ..models import Task
+
+logger = logging.getLogger(__name__)
 
 
 class TaskQueueService(ABC):
@@ -62,6 +65,10 @@ try:
             """
             Add the task to the Redis queue.
 
+            If the task already has a scheduled_job_id, the existing job will be
+            cancelled before creating a new one to prevent duplicate scheduling.
+            This ensures idempotency when re-scheduling tasks after restarts.
+
             Args:
                 task: The task to be added.
 
@@ -69,13 +76,38 @@ try:
                 The job created for the task, either scheduled or enqueued for immediate execution.
 
             Raises:
-                 Exception: If there is an error while launching the task.
+                TaskQueueException: If there is an error while launching the task.
 
             """
             from eztaskmanager.services import run_management_command
 
             if task.scheduling and task.scheduling_utc < timezone.now():
                 raise TaskQueueException(_("It is not possible to schedule tasks in the past"))
+
+            # Prevent duplicate scheduling - cancel existing job if present
+            if task.scheduled_job_id:
+                logger.warning(
+                    f"Task '{task.name}' (ID: {task.id}) already has scheduled job "
+                    f"'{task.scheduled_job_id}'. Cancelling old job before creating new one."
+                )
+                try:
+                    # Try to cancel the existing scheduled job
+                    self.scheduler.cancel(task.scheduled_job_id)
+                    logger.info(
+                        f"Successfully cancelled old scheduled job '{task.scheduled_job_id}' "
+                        f"for task '{task.name}' (ID: {task.id})"
+                    )
+                except Exception as e:
+                    # Job might not exist in Redis anymore (already executed or manually removed)
+                    # This is acceptable - we'll create a new one
+                    logger.debug(
+                        f"Could not cancel old scheduled job '{task.scheduled_job_id}' "
+                        f"for task '{task.name}' (ID: {task.id}): {e}. "
+                        f"Job may have already been removed."
+                    )
+                finally:
+                    # Clear the old job ID to start fresh
+                    task.scheduled_job_id = None
 
             try:
                 if task.scheduling:

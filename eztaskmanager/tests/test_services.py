@@ -448,6 +448,264 @@ class TestGetBaseUrl(TestCase):
         self.assertEqual("test2.com", result)
 
 
+class TestRQTaskQueueServiceDeduplication(TestCase):
+    """
+    Test suite for task deduplication logic in RQTaskQueueService.
+
+    These tests verify that the service properly handles duplicate scheduling
+    scenarios that can occur during stack restarts, CI/CD deployments, or
+    manual re-activation of tasks.
+    """
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_add_task_without_existing_job_id(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that a task without an existing scheduled_job_id is added normally
+        without triggering deduplication logic.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.scheduled_job_id = None  # No existing job
+            mock_task.scheduling = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.scheduling_utc = timezone.make_aware(
+                datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+            )
+            mock_task.is_periodic = False
+            mock_task.id = 1
+
+            mock_rq_job = MagicMock(id='new-job-001')
+            service.scheduler.enqueue_at.return_value = mock_rq_job
+            mock_fetch_job_with_next_time.return_value = ('job', 'next_time')
+
+            service.add(mock_task)
+
+            # Assert scheduler.cancel was NOT called (no deduplication needed)
+            service.scheduler.cancel.assert_not_called()
+
+            # Assert new job was created
+            service.scheduler.enqueue_at.assert_called_once()
+            self.assertEqual(mock_task.scheduled_job_id, 'new-job-001')
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_add_task_with_existing_valid_job_id(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that a task with an existing scheduled_job_id that still exists in Redis
+        will have the old job cancelled before creating a new one.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.scheduled_job_id = 'old-job-123'  # Existing job
+            mock_task.name = 'test_task'
+            mock_task.id = 42
+            mock_task.scheduling = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.scheduling_utc = timezone.make_aware(
+                datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+            )
+            mock_task.is_periodic = False
+
+            mock_new_job = MagicMock(id='new-job-456')
+            service.scheduler.enqueue_at.return_value = mock_new_job
+            mock_fetch_job_with_next_time.return_value = ('job', 'next_time')
+
+            # Mock successful cancellation (job exists in Redis)
+            service.scheduler.cancel.return_value = None
+
+            service.add(mock_task)
+
+            # Assert old job was cancelled
+            service.scheduler.cancel.assert_called_once_with('old-job-123')
+
+            # Assert new job was created
+            service.scheduler.enqueue_at.assert_called_once()
+            self.assertEqual(mock_task.scheduled_job_id, 'new-job-456')
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_add_task_with_orphaned_job_id(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that a task with an existing scheduled_job_id that no longer exists
+        in Redis (orphaned) will handle the cancellation exception gracefully
+        and still create a new job.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.scheduled_job_id = 'orphaned-job-999'  # Job doesn't exist in Redis
+            mock_task.name = 'test_task'
+            mock_task.id = 99
+            mock_task.scheduling = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.scheduling_utc = timezone.make_aware(
+                datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+            )
+            mock_task.is_periodic = False
+
+            mock_new_job = MagicMock(id='new-job-789')
+            service.scheduler.enqueue_at.return_value = mock_new_job
+            mock_fetch_job_with_next_time.return_value = ('job', 'next_time')
+
+            # Mock failed cancellation (job doesn't exist in Redis)
+            service.scheduler.cancel.side_effect = Exception("Job not found in Redis")
+
+            # Should not raise exception
+            service.add(mock_task)
+
+            # Assert cancellation was attempted
+            service.scheduler.cancel.assert_called_once_with('orphaned-job-999')
+
+            # Assert new job was still created despite cancellation failure
+            service.scheduler.enqueue_at.assert_called_once()
+            self.assertEqual(mock_task.scheduled_job_id, 'new-job-789')
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_add_periodic_task_with_existing_job_id(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that a periodic task with an existing scheduled_job_id properly
+        cancels the old job before creating a new periodic schedule.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.scheduled_job_id = 'old-periodic-job-111'
+            mock_task.name = 'periodic_task'
+            mock_task.id = 55
+            mock_task.scheduling = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.scheduling_utc = timezone.make_aware(
+                datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+            )
+            mock_task.is_periodic = True
+            mock_task.interval_in_seconds = 3600
+
+            mock_new_job = MagicMock(id='new-periodic-job-222')
+            service.scheduler.schedule.return_value = mock_new_job
+            mock_fetch_job_with_next_time.return_value = ('job', 'next_time')
+
+            service.add(mock_task)
+
+            # Assert old job was cancelled
+            service.scheduler.cancel.assert_called_once_with('old-periodic-job-111')
+
+            # Assert new periodic job was created
+            service.scheduler.schedule.assert_called_once()
+            self.assertEqual(mock_task.scheduled_job_id, 'new-periodic-job-222')
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    @patch('eztaskmanager.services.queues.RQTaskQueueService.fetch_job_with_next_time')
+    def test_multiple_rapid_rescheduling(
+            self,
+            mock_fetch_job_with_next_time, mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that multiple rapid re-scheduling attempts properly handle
+        deduplication each time without issues.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.name = 'rapid_reschedule_task'
+            mock_task.id = 77
+            mock_task.scheduling = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+            mock_task.scheduling_utc = timezone.make_aware(
+                datetime.strptime(mock_task.scheduling, "%Y-%m-%d %H:%M:%S")
+            )
+            mock_task.is_periodic = False
+
+            mock_fetch_job_with_next_time.return_value = ('job', 'next_time')
+
+            # First scheduling (no existing job)
+            mock_task.scheduled_job_id = None
+            mock_job1 = MagicMock(id='job-001')
+            service.scheduler.enqueue_at.return_value = mock_job1
+            service.add(mock_task)
+            self.assertEqual(mock_task.scheduled_job_id, 'job-001')
+
+            # Second scheduling (has existing job from first scheduling)
+            mock_job2 = MagicMock(id='job-002')
+            service.scheduler.enqueue_at.return_value = mock_job2
+            service.add(mock_task)
+            self.assertEqual(mock_task.scheduled_job_id, 'job-002')
+
+            # Third scheduling (has existing job from second scheduling)
+            mock_job3 = MagicMock(id='job-003')
+            service.scheduler.enqueue_at.return_value = mock_job3
+            service.add(mock_task)
+            self.assertEqual(mock_task.scheduled_job_id, 'job-003')
+
+            # Assert scheduler.cancel was called twice (second and third time)
+            self.assertEqual(service.scheduler.cancel.call_count, 2)
+
+    @patch('django_rq.get_queue', return_value=MagicMock())
+    @patch('django_rq.get_scheduler', return_value=MagicMock())
+    @patch('eztaskmanager.services.run_management_command')
+    def test_immediate_execution_with_existing_job_id(
+            self,
+            mock_run_management_command,
+            mock_get_scheduler, mock_get_queue
+    ):
+        """
+        Test that immediate execution (no scheduling) DOES trigger deduplication
+        if task has a scheduled_job_id from a previous schedule.
+
+        This is correct behavior - it cleans up orphaned scheduled jobs even when
+        switching to immediate execution.
+        """
+        if tsq_imported_module == 'rq':
+            service = RQTaskQueueService()
+
+            mock_task = MagicMock()
+            mock_task.scheduled_job_id = 'leftover-job-888'
+            mock_task.name = 'immediate_task'
+            mock_task.scheduling = None  # Immediate execution
+            mock_task.id = 88
+
+            mock_new_job = MagicMock(id='immediate-job-999')
+            service.queue.enqueue.return_value = mock_new_job
+
+            service.add(mock_task)
+
+            # Assert scheduler.cancel WAS called to clean up the old scheduled job
+            service.scheduler.cancel.assert_called_once_with('leftover-job-888')
+
+            # Assert immediate execution was queued
+            service.queue.enqueue.assert_called_once_with(mock_run_management_command, mock_task.id)
+
+
 class TestEmitNotifications(TestCase):
 
     def setUp(self):

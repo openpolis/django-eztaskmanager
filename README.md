@@ -181,6 +181,42 @@ Then execute this commands to setup the server in development mode, the rq worke
 
 Visit http://127.0.0.1:8000/admin/
 
+## Development and Testing
+
+### Running Tests
+
+The project uses Django's test framework. Tests are located in `eztaskmanager/tests/`.
+
+To run the test suite:
+
+```bash
+# Install development dependencies with Poetry
+poetry install
+
+# Run all tests
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+poetry run python demoproject/manage.py test --verbosity=2
+
+# Run specific test module
+poetry run python demoproject/manage.py test eztaskmanager.tests.test_services
+
+# Run tests with coverage
+poetry run coverage run demoproject/manage.py test
+poetry run coverage report
+```
+
+### Code Quality
+
+```bash
+# Format code with black
+poetry run black eztaskmanager/
+
+# Run flake8 linting
+poetry run flake8 eztaskmanager/
+
+# Type checking with mypy
+poetry run mypy eztaskmanager/
+```
 
 ## Copyright
 
