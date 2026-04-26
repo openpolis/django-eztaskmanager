@@ -51,13 +51,13 @@ Example:
         },
         "slack-failures": {
             "class": "eztaskmanager.services.notifications.SlackNotificationHandler",
-            "level": "failure",
+            "level": "failed",
             "token": "<token>",
             "channel": "id-or-name-of-channel",
         },
         "email-failures": {
             "class": "eztaskmanager.services.notifications.EmailNotificationHandler",
-            "level": "failure",
+            "level": "failed",
             "from_email": "admin@example.com",
             "recipients": ["admin@example.com",],
         },
