@@ -10,9 +10,9 @@ jobs:
   lint-check:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
+      max-parallel: 3
       matrix:
-        python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
+        python-version: ['3.10', 3.11, 3.12]
 
     steps:
       - uses: actions/checkout@main
@@ -55,9 +55,9 @@ jobs:
     needs: lint-check
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
-        python-version: [3.9, '3.10', 3.11, 3.12]
+        python-version: ['3.10', 3.11, 3.12]
 
     steps:
     - uses: actions/checkout@main
@@ -79,9 +79,9 @@ jobs:
     needs: lint-check
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
+      max-parallel: 1
       matrix:
-        python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
+        python-version: ['3.10']
 
     steps:
     - uses: actions/checkout@main
