@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.5.3] - 2026-10-05
+
+### Changed
+
+- Dates and times are now shown in the local time zone (`TIME_ZONE`) with the zone abbreviation, e.g. `2026-10-05 09:49:07 CEST`, instead of UTC. This applies to the log lines in the admin, in the log viewer and in notifications (`LaunchReport.get_log_lines`, `read_log_lines`, `log_tail`, via the new `Log.formatted_line`), to the launch time in Slack and email notifications, to the next execution of tasks and the launch date of reports in the admin, and to the "Launched at" field of the log viewer (#12, closes #13).
+- `eztaskmanager.admin.convert_to_local_dt` is kept as an alias of the new `eztaskmanager.utils.format_local_dt`, but its output now includes the time zone abbreviation.
+- `admin.py` no longer imports `pytz`; the dependency is still declared in `pyproject.toml` but is no longer used by the code.
+- Removed Python 3.8 and 3.9 from the CI test matrix; Django 3.2 is now tested only on Python 3.10. `pyproject.toml` already declares `python = ">=3.10"`.
+
+### Known issues
+
+- Periodic tasks start a few seconds later every day, and do not follow daylight saving time changes (#11); not addressed in this release.
+
 ## [0.1.0]
 
 ### Added
