@@ -242,7 +242,7 @@
                         <li><pre>{{ argument }}</pre></li>
                     {% endfor %}
                 </ul>
-            <li>{% trans "Launched at" %}: <pre>{{ report.invocation_datetime|date:'Y-m-d H:i:s' }}</pre></li>
+            <li>{% trans "Launched at" %}: <pre>{{ report.invocation_datetime|date:'Y-m-d H:i:s T' }}</pre></li>
             <li>{% trans "Current status" %}: <pre v-if="status != 'unknown'">[[ status ]]</pre></li>
         </ul>
     </div>

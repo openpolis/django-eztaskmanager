@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from eztaskmanager.settings import EZTASKMANAGER_N_REPORTS_INLINE
+from eztaskmanager.utils import format_local_dt
 
 
 class AppCommand(models.Model):
@@ -70,7 +71,7 @@ class LaunchReport(models.Model):
     def get_log_lines(self):
         """Format the log entries, here is an example."""
         log_lines = [
-            f"{log.timestamp} - {log.level} - {log.message}"
+            log.formatted_line
             for log in self.logs.order_by('timestamp')
         ]
         return log_lines
@@ -87,7 +88,7 @@ class LaunchReport(models.Model):
 
         """
         log_lines = [
-            f"{log.timestamp} - {log.level} - {log.message}"
+            log.formatted_line
             for log in self.logs.all()
         ]
         return log_lines[offset:], len(log_lines)
@@ -105,7 +106,7 @@ class LaunchReport(models.Model):
 
         for log in reversed(logs):
             # Format the log entries as you like, here is an example
-            log_line = f"{log.timestamp} - {log.level} - {log.message}"
+            log_line = log.formatted_line
             report_lines.append(log_line)
 
         report = "\n".join(report_lines)
@@ -159,6 +160,11 @@ class Log(models.Model):
 
     def __str__(self):
         return f'Log {self.id}: {self.level} at {self.timestamp}'
+
+    @property
+    def formatted_line(self):
+        """Return the log line as shown in the admin, the log viewer and the notifications."""
+        return f"{format_local_dt(self.timestamp)} - {self.level} - {self.message}"
 
 
 class TaskCategory(models.Model):

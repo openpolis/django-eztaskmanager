@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.actions import delete_selected
 from django.http import HttpResponseRedirect
@@ -6,28 +5,15 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from pytz import timezone
 
 from eztaskmanager.models import AppCommand, LaunchReport, Task, TaskCategory
 from eztaskmanager.services.queues import TaskQueueException
 from eztaskmanager.settings import (EZTASKMANAGER_N_LINES_IN_REPORT_LOG,
                                     EZTASKMANAGER_SHOW_LOGVIEWER_LINK)
+from eztaskmanager.utils import format_local_dt
 
-
-def convert_to_local_dt(dt):
-    """Convert datetime into local datetime, if django settings are set up to use TZ.
-
-    Datetime fields in django store datetimes as UTC date, if the USE_TZ setting is set.
-    To have the correct datetime sent to the admin, without using the django templating
-    system, the conversion needs to be done manually.
-    """
-    try:
-        if settings.USE_TZ:
-            local_tz = timezone(settings.TIME_ZONE)
-            dt = local_tz.normalize(dt.astimezone(local_tz))
-        return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except AttributeError:
-        return ""
+# kept for backward compatibility
+convert_to_local_dt = format_local_dt
 
 
 @admin.register(AppCommand)
@@ -149,6 +135,11 @@ class LaunchReportMixin(object):
         lines += "</pre>"
         return lines
 
+    @admin.display(description=_("Invocation datetime"), ordering="invocation_datetime")
+    def invocation_datetime_local(self, report):
+        """Return the invocation datetime in the local time zone, with the zone abbreviation."""
+        return format_local_dt(report.invocation_datetime)
+
 
 # @admin.register(LaunchReport)
 class LaunchReportAdmin(LaunchReportMixin, admin.ModelAdmin):
@@ -158,12 +149,12 @@ class LaunchReportAdmin(LaunchReportMixin, admin.ModelAdmin):
     fields = readonly_fields = (
         "task",
         "invocation_result",
-        "invocation_datetime",
+        "invocation_datetime_local",
         "log_tail_html",
         "n_log_errors",
         "n_log_warnings",
     )
-    list_display = ("task", "invocation_result", "invocation_datetime")
+    list_display = ("task", "invocation_result", "invocation_datetime_local")
     list_filter = ("invocation_result",)
     ordering = ("-invocation_datetime", "-id")
     search_field = ("task__name", "task__status", "task__spooler_id")
@@ -186,7 +177,7 @@ class LaunchReportInline(LaunchReportMixin, admin.TabularInline):
     max_num = 5
     extra = 0
     fields = readonly_fields = (
-        "invocation_result", "invocation_datetime", "log_tail_html", "n_log_errors", "n_log_warnings",
+        "invocation_result", "invocation_datetime_local", "log_tail_html", "n_log_errors", "n_log_warnings",
     )
     ordering = [
         "-invocation_datetime",
@@ -211,7 +202,7 @@ class TaskInline(admin.TabularInline):
         """Return the string representation of status/last result/next ride."""
         status_str = obj.status + "/"
         if obj.cached_last_invocation_datetime:
-            last_invocation_dt = convert_to_local_dt(obj.cached_last_invocation_datetime)
+            last_invocation_dt = format_local_dt(obj.cached_last_invocation_datetime)
             s = (
                 f"{last_invocation_dt}: "
                 f"{obj.cached_last_invocation_result} - "
@@ -223,7 +214,7 @@ class TaskInline(admin.TabularInline):
 
         status_str += s + "/"
         if obj.cached_next_ride:
-            s = f"{convert_to_local_dt(obj.cached_next_ride)}"
+            s = f"{format_local_dt(obj.cached_next_ride)}"
         else:
             s = "-"
         status_str += s
@@ -367,9 +358,13 @@ class TaskAdmin(BulkDeleteMixin, admin.ModelAdmin):
     def cached_last_invocation_datetime(self, obj):
         """Return the string representation of the next ride."""
         if obj.cached_last_invocation_datetime:
-            return f"{convert_to_local_dt(obj.cached_last_invocation_datetime)}"
+            return f"{format_local_dt(obj.cached_last_invocation_datetime)}"
         else:
             return "-"
+
+    def cached_next_ride(self, obj):
+        """Return the next ride in the local time zone, with the zone abbreviation."""
+        return format_local_dt(obj.cached_next_ride) or "-"
 
     def response_change(self, request, task):
         """Determine the HttpResponse for the change_view stage."""
