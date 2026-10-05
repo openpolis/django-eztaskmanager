@@ -1,8 +1,8 @@
 # Unittest Test case
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -304,6 +304,7 @@ class TestRQTaskQueueService(TestCase):
             self.assertEqual(next_time, None)
 
 
+@override_settings(TIME_ZONE="Europe/Rome")
 class TestSlackNotificationHandler(TestCase):
 
     @patch('slack_sdk.WebClient')
@@ -334,7 +335,7 @@ class TestSlackNotificationHandler(TestCase):
         mock_webclient_instance = mock_webclient.return_value
         mock_report = MagicMock()
         mock_report.task.name = 'test_task'
-        mock_report.invocation_datetime.strftime.return_value = 'test_time'
+        mock_report.invocation_datetime = datetime(2026, 10, 5, 7, 49, 7, tzinfo=dt_timezone.utc)
         mock_report.n_log_warnings = 1
         mock_report.n_log_errors = 2
         mock_report.id = 1
@@ -345,7 +346,7 @@ class TestSlackNotificationHandler(TestCase):
 
         formatted_message = MESSAGES[result].format(
             task_name=mock_report.task.name,
-            invocation_time=mock_report.invocation_datetime.strftime("%x %X"),
+            invocation_time="2026-10-05 09:49:07 CEST",
             n_warnings=mock_report.n_log_warnings,
             n_errors=mock_report.n_log_errors,
         )
@@ -367,6 +368,7 @@ class TestSlackNotificationHandler(TestCase):
         mock_webclient_instance.chat_postMessage.assert_called_with(channel=expected_channel, blocks=expected_blocks)
 
 
+@override_settings(TIME_ZONE="Europe/Rome")
 class TestEmailNotificationHandler(TestCase):
 
     def test_init(self):
@@ -393,7 +395,7 @@ class TestEmailNotificationHandler(TestCase):
 
         mock_report = MagicMock()
         mock_report.task.name = 'test_task'
-        mock_report.invocation_datetime.strftime.return_value = 'test_time'
+        mock_report.invocation_datetime = datetime(2026, 10, 5, 7, 49, 7, tzinfo=dt_timezone.utc)
         mock_report.n_log_warnings = 1
         mock_report.n_log_errors = 2
         mock_report.id = 1
@@ -410,7 +412,7 @@ class TestEmailNotificationHandler(TestCase):
             subject=MESSAGES[result],
             message=MESSAGES[result].format(
                 task_name=mock_report.task.name,
-                invocation_time=mock_report.invocation_datetime.strftime("%x %X"),
+                invocation_time="2026-10-05 09:49:07 CEST",
                 n_warnings=mock_report.n_log_warnings,
                 n_errors=mock_report.n_log_errors,
             ),
@@ -711,7 +713,7 @@ class TestEmitNotifications(TestCase):
     def setUp(self):
         mock_report = MagicMock()
         mock_report.task.name = 'test_task'
-        mock_report.invocation_datetime.strftime.return_value = 'test_time'
+        mock_report.invocation_datetime = datetime(2026, 10, 5, 7, 49, 7, tzinfo=dt_timezone.utc)
         mock_report.n_log_warnings = 1
         mock_report.n_log_errors = 2
         mock_report.id = 1

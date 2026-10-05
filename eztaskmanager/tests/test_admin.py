@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from unittest.mock import patch, Mock, call, MagicMock
 
 from bs4 import BeautifulSoup
@@ -8,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
-from django.test import TestCase, RequestFactory, Client
+from django.test import TestCase, RequestFactory, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -60,6 +61,11 @@ class LaunchReportAdminTest(TestCase):
             self.admin.has_add_permission(request), False,
             "has_add_permission doesn't work as expected"
         )
+
+    @override_settings(TIME_ZONE='Europe/Rome')
+    def test_invocation_datetime_local(self):
+        report = Mock(invocation_datetime=datetime(2026, 10, 5, 7, 49, 7, tzinfo=dt_timezone.utc))
+        self.assertEqual(self.admin.invocation_datetime_local(report), "2026-10-05 09:49:07 CEST")
 
     def test_changeform_view(self):
         response = self.admin.changeform_view(request, object_id=str(self.launch_report.id))
@@ -185,6 +191,18 @@ class TaskAdminTest(TestCase):
     def setUp(self):
         self.site = AdminSite()
         self.admin = TaskAdmin(Task, self.site)
+
+    @override_settings(TIME_ZONE='Europe/Rome')
+    def test_datetimes_are_local_with_zone(self):
+        task = Mock(
+            cached_next_ride=datetime(2026, 10, 5, 7, 15, tzinfo=dt_timezone.utc),
+            cached_last_invocation_datetime=datetime(2025, 11, 13, 7, 15, tzinfo=dt_timezone.utc),
+        )
+        self.assertEqual(self.admin.cached_next_ride(task), "2026-10-05 09:15:00 CEST")
+        self.assertEqual(self.admin.cached_last_invocation_datetime(task), "2025-11-13 08:15:00 CET")
+
+    def test_cached_next_ride_empty(self):
+        self.assertEqual(self.admin.cached_next_ride(Mock(cached_next_ride=None)), "-")
 
     @patch.object(messages, "add_message")
     @patch('eztaskmanager.services.queues.get_task_service')

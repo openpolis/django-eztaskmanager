@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock
 
-from django.test import TestCase
+from datetime import datetime, timezone as dt_timezone
+
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from eztaskmanager.models import AppCommand, Task, LaunchReport, Log, TaskCategory
@@ -65,24 +67,29 @@ class LaunchReportTestCase(TestCase):
             timestamp=timezone.now(),
             launch_report=self.launch_report
         )
+        # timestamp is auto_now_add: set fixed UTC instants afterwards
+        Log.objects.filter(pk=self.first_log.pk).update(
+            timestamp=datetime(2026, 10, 5, 7, 49, 7, tzinfo=dt_timezone.utc)
+        )
+        Log.objects.filter(pk=self.last_log.pk).update(
+            timestamp=datetime(2026, 10, 5, 7, 49, 8, tzinfo=dt_timezone.utc)
+        )
 
+    @override_settings(TIME_ZONE='Europe/Rome')
     def test_get_log_lines(self):
         log_lines = self.launch_report.get_log_lines()
-        self.assertEqual(
-            log_lines[0],
-            f"{self.first_log.timestamp} - {self.first_log.level} - {self.first_log.message}"
-        )
+        self.assertEqual(log_lines[0], "2026-10-05 09:49:07 CEST - INFO - This is an info log")
 
+    @override_settings(TIME_ZONE='Europe/Rome')
     def test_read_log_lines(self):
         log_lines, total_lines = self.launch_report.read_log_lines(1)
-        self.assertEqual(
-            log_lines[0], f"{self.last_log.timestamp} - {self.last_log.level} - {self.last_log.message}"
-        )
+        self.assertEqual(log_lines[0], "2026-10-05 09:49:08 CEST - ERROR - This is a test log")
         self.assertEqual(total_lines, 2)
 
+    @override_settings(TIME_ZONE='Europe/Rome')
     def test_log_tail(self):
         report = self.launch_report.log_tail(1)
-        self.assertIn(f"{self.last_log.timestamp} - {self.last_log.level} - {self.last_log.message}", report)
+        self.assertIn("2026-10-05 09:49:08 CEST - ERROR - This is a test log", report)
 
     def test_n_log_lines(self):
         self.assertEqual(self.launch_report.n_log_lines, 2)

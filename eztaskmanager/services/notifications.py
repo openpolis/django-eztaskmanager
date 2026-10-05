@@ -14,6 +14,7 @@ except ImportError:
 from abc import ABC, abstractmethod
 
 from eztaskmanager.settings import EZTASKMANAGER_BASE_URL
+from eztaskmanager.utils import format_local_dt
 
 LEVEL_MAPPING = {
     "ok": 0,
@@ -94,7 +95,7 @@ class SlackNotificationHandler(NotificationHandler):
         result = LEVEL_MAPPING[report.invocation_result]
         formatted_message = MESSAGES[result].format(
             task_name=report.task.name,
-            invocation_time=report.invocation_datetime.strftime("%x %X"),
+            invocation_time=format_local_dt(report.invocation_datetime),
             n_warnings=report.n_log_warnings,
             n_errors=report.n_log_errors,
         )
@@ -142,7 +143,7 @@ class EmailNotificationHandler(NotificationHandler):
             subject=MESSAGES[result],
             message=MESSAGES[result].format(
                 task_name=report.task.name,
-                invocation_time=report.invocation_datetime.strftime("%x %X"),
+                invocation_time=format_local_dt(report.invocation_datetime),
                 n_warnings=report.n_log_warnings,
                 n_errors=report.n_log_errors,
             ),
